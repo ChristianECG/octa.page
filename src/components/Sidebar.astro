@@ -1,0 +1,349 @@
+---
+import { getCollection } from 'astro:content';
+
+const ALL_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+const NAV_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
+
+const [publishedEntries, allEntriesRaw] = await Promise.all([
+  Promise.all(ALL_TYPES.map(c => getCollection(c, ({ data }) => data.status === 'published'))).then(r => r.flat()),
+  Promise.all(ALL_TYPES.map(c => getCollection(c))).then(r => r.flat()),
+]);
+
+const now = new Date();
+const thisMonthEntries = publishedEntries.filter(e => {
+  const d = e.data.date;
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+});
+const pinnedEntries = publishedEntries.filter(e => e.data.pinned);
+const draftEntries  = allEntriesRaw.filter(e => e.data.status === 'draft');
+const totalEntries  = publishedEntries.length;
+
+const typeCounts = Object.fromEntries(
+  await Promise.all(
+    NAV_TYPES.map(async t => [t, (await getCollection(t, ({ data }) => data.status === 'published')).length])
+  )
+);
+
+const typeList = NAV_TYPES.map(t => ({
+  label: t.charAt(0).toUpperCase() + t.slice(1),
+  href:  `/type/${t}`,
+  count: typeCounts[t] ?? 0,
+}));
+
+const projects = [...new Set(
+  publishedEntries.map(e => e.data.project).filter(Boolean)
+)].sort().map(name => ({
+  name: name as string,
+  count: publishedEntries.filter(e => e.data.project === name).length,
+}));
+
+const pathname = Astro.url.pathname;
+---
+
+<aside class="sidebar" id="sidebar">
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <a href="/" class="brand-link">
+      <svg class="brand-glyph" width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="0.5" y="0.5" width="13" height="13" stroke="currentColor" stroke-opacity="0.4"/>
+        <rect x="4" y="4" width="6" height="6" fill="var(--color-accent)"/>
+      </svg>
+      <span class="brand-name">OCTA</span>
+    </a>
+    <span class="brand-version">/v0.1</span>
+    <button class="sidebar-close" id="sidebar-close" aria-label="Close">✕</button>
+  </div>
+
+  <!-- Nav scroll area -->
+  <nav class="sidebar-nav" aria-label="Navigation">
+    <!-- Index group -->
+    <div class="nav-group">
+      <p class="nav-group-label">Index</p>
+      <ul class="nav-list">
+        <li>
+          <a href="/" class:list={['nav-item', { active: pathname === '/' }]}>
+            <span>All notes</span>
+            <span class="nav-count">{totalEntries}</span>
+          </a>
+        </li>
+        <li>
+          <a href="/?filter=month" class="nav-item">
+            <span>This month</span>
+            <span class="nav-count">{thisMonthEntries.length}</span>
+          </a>
+        </li>
+        {pinnedEntries.length > 0 && (
+          <li>
+            <a href="/?filter=pinned" class="nav-item">
+              <span>Pinned</span>
+              <span class="nav-count">{pinnedEntries.length}</span>
+            </a>
+          </li>
+        )}
+        {draftEntries.length > 0 && (
+          <li>
+            <span class="nav-item nav-item--dim">
+              <span>Drafts</span>
+              <span class="nav-count">{draftEntries.length}</span>
+            </span>
+          </li>
+        )}
+      </ul>
+    </div>
+
+    <!-- Types group -->
+    <div class="nav-group">
+      <p class="nav-group-label">Types</p>
+      <ul class="nav-list">
+        {typeList.map(({ label, href, count }) => (
+          <li>
+            <a href={href} class:list={['nav-item', { active: pathname.startsWith(href) }]}>
+              <span>{label}</span>
+              <span class="nav-count">{count}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Projects group -->
+    {projects.length > 0 && (
+      <div class="nav-group">
+        <p class="nav-group-label">Projects</p>
+        <ul class="nav-list">
+          {projects.map(({ name, count }) => (
+            <li>
+              <a
+                href={`/project/${name}`}
+                class:list={['nav-item', { active: pathname.startsWith(`/project/${name}`) }]}
+              >
+                <span>{name}</span>
+                <span class="nav-count">{count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </nav>
+
+  <!-- Status block -->
+  <div class="sidebar-status">
+    <div class="status-row">
+      <span class="status-label">build</span>
+      <span class="status-value status-ok"><span class="status-dot"></span>ok</span>
+    </div>
+    <div class="status-row">
+      <span class="status-label">entries</span>
+      <span class="status-value">{totalEntries}</span>
+    </div>
+    <div class="status-row">
+      <span class="status-label">utc</span>
+      <span class="status-value status-clock" id="utc-clock">——:——:——</span>
+    </div>
+  </div>
+</aside>
+
+<script>
+  document.getElementById('sidebar-close')?.addEventListener('click', () => {
+    document.getElementById('sidebar')?.removeAttribute('data-open');
+    document.getElementById('sidebar-overlay')?.removeAttribute('data-open');
+  });
+
+  const clock = document.getElementById('utc-clock');
+  if (clock) {
+    const tick = () => {
+      const now = new Date();
+      clock.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false, timeZone: 'UTC',
+      });
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+</script>
+
+<style>
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 20px;
+    flex-shrink: 0;
+  }
+
+  .brand-link {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .brand-glyph { color: var(--color-mute); flex-shrink: 0; }
+
+  .brand-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-ink);
+  }
+
+  .brand-version {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    margin-left: 2px;
+  }
+
+  .sidebar-close {
+    display: none;
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--color-mute);
+    cursor: pointer;
+    font-size: 11px;
+    padding: 2px 4px;
+    line-height: 1;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding: 4px 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .sidebar-nav::-webkit-scrollbar { display: none; }
+
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav-group-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+    margin: 0;
+    padding: 0 20px 6px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 2px 0;
+  }
+
+  li { position: relative; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-2);
+    text-decoration: none;
+    transition: color 0.12s;
+    cursor: pointer;
+  }
+
+  .nav-item:hover { color: var(--color-ink); }
+
+  .nav-item.active { color: var(--color-accent); }
+
+  .nav-item.active::before {
+    content: '›';
+    position: absolute;
+    left: 8px;
+    color: var(--color-accent);
+    font-size: 14px;
+    line-height: 1;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .nav-item--dim { color: var(--color-mute-2); cursor: default; }
+
+  .nav-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-mute);
+  }
+
+  .sidebar-status {
+    margin-top: auto;
+    padding: 12px 20px;
+    border-top: 1px solid var(--color-rule);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--color-mute);
+    min-width: 44px;
+  }
+
+  .status-value {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink);
+  }
+
+  .status-ok {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--color-accent);
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    box-shadow: 0 0 4px var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 50;
+      height: 100dvh;
+      width: 260px;
+      transform: translateX(-100%);
+      transition: transform 0.2s ease;
+      box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6);
+      background-color: var(--color-bg);
+    }
+
+    .sidebar[data-open] { transform: translateX(0); }
+
+    .sidebar-close { display: block; }
+  }
+</style>

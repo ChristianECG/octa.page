@@ -1,0 +1,170 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
+type DocType = typeof TYPES[number];
+
+export async function getStaticPaths() {
+  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
+  return types.map(type => ({ params: { type } }));
+}
+
+const { type } = Astro.params as { type: DocType };
+
+const labels: Record<DocType, string> = {
+  architecture: 'Architecture',
+  runtime:      'Runtime',
+  pulse:        'Pulse',
+  systems:      'Systems',
+  notes:        'Notes',
+};
+
+const entries = await getCollection(type, ({ data }) => data.status === 'published');
+const sorted  = entries.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const label   = labels[type];
+
+function readingTime(body?: string): string {
+  if (!body) return '—';
+  return `${Math.max(1, Math.round(body.split(/\s+/).length / 200))}m`;
+}
+---
+
+<BaseLayout title={label} ogImage={`/og/type/${type}.png`}>
+  <div class="top-strip">
+    <span class="strip-left">octa · {type} · {new Date().getFullYear()}</span>
+    <span class="strip-right">{sorted.length} {sorted.length === 1 ? 'entry' : 'entries'}</span>
+  </div>
+
+  <div class="hero">
+    <h1 class="hero-title">{label}</h1>
+  </div>
+
+  {sorted.length === 0 ? (
+    <p class="empty">No entries yet.</p>
+  ) : (
+    <div class="table-wrap">
+      <table class="entries-table">
+        <thead>
+          <tr>
+            <th class="col-n">#</th>
+            <th class="col-date">Date</th>
+            <th class="col-title">Title</th>
+            <th class="col-read">Read</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((entry, i) => (
+            <tr class="entry-row">
+              <td class="cell-n">{String(i + 1).padStart(2, '0')}</td>
+              <td class="cell-date">
+                {entry.data.date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' })}
+              </td>
+              <td class="cell-title">
+                <a href={`/doc/${entry.id}`} class="entry-link">{entry.data.title}</a>
+              </td>
+              <td class="cell-read">{readingTime((entry as any).body)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</BaseLayout>
+
+<style>
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-rule);
+    margin-bottom: 28px;
+  }
+
+  .strip-left, .strip-right {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+  }
+
+  .hero {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .hero-title {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+  }
+
+  .table-wrap { overflow-x: auto; }
+
+  .entries-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 480px;
+  }
+
+  .col-n    { width: 44px; }
+  .col-date { width: 96px; }
+  .col-title {}
+  .col-read { width: 60px; text-align: right; }
+
+  .entry-row:hover .cell-title,
+  .entry-row:hover .cell-date,
+  .entry-row:hover .cell-n { color: var(--color-ink); }
+
+  .cell-n {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-mute);
+    transition: color 0.12s;
+  }
+
+  .cell-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-ink-2);
+    white-space: nowrap;
+    transition: color 0.12s;
+  }
+
+  .cell-title {
+    font-size: 13px;
+    color: var(--color-ink);
+    transition: color 0.12s;
+  }
+
+  .entry-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .entry-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  tr { position: relative; }
+
+  .cell-read {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-mute);
+    text-align: right;
+  }
+
+  .empty {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-mute);
+    padding: 24px 0;
+  }
+</style>

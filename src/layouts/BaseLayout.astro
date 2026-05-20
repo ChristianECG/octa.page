@@ -1,0 +1,208 @@
+---
+import '../styles/global.css';
+import Sidebar from '../components/Sidebar.astro';
+import CommandPalette from '../components/CommandPalette.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description = 'Technical notebook. Systems research. Engineering investigations.',
+  ogImage = '/og/index.png',
+} = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL   = new URL(ogImage, Astro.site);
+
+const socialLinks = [
+  { label: 'christianecg.com', href: 'https://christianecg.com' },
+  { label: 'github',           href: 'https://github.com/ChristianECG' },
+  { label: 'linkedin',         href: 'https://www.linkedin.com/in/christianeliascg/' },
+  { label: 'rss',              href: '/rss.xml' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title === 'Octa' ? 'Octa' : `${title} — Octa`}</title>
+    <meta name="description" content={description} />
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
+    <link rel="alternate" type="application/rss+xml" title="Octa" href="/rss.xml" />
+  </head>
+
+  <body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="app-layout">
+      <Sidebar />
+
+      <div class="app-main">
+        <div class="mobile-bar">
+          <button class="menu-btn" id="menu-btn" aria-label="Open navigation">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="3" y1="6"  x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <a href="/" class="mobile-brand">OCTA</a>
+        </div>
+
+        <main>
+          <slot />
+        </main>
+
+        <footer class="site-footer">
+          <span class="footer-copy">octa · {new Date().getFullYear()}</span>
+          <div class="footer-links">
+            {socialLinks.map(({ label, href }) => (
+              <a href={href} class="footer-link" target="_blank" rel="noopener noreferrer">{label}</a>
+            ))}
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <CommandPalette />
+
+    <script>
+      console.log(
+        '%cOCTA',
+        'font-family:monospace;font-size:22px;font-weight:500;color:#8fabc8;letter-spacing:0.08em'
+      );
+      console.log(
+        '%c/v0.1  ·  systems notes & runtime investigations.\n\nYou opened DevTools. That tracks.',
+        'font-family:monospace;font-size:11px;color:#5e6670;line-height:2'
+      );
+    </script>
+
+    <script>
+      const menuBtn = document.getElementById('menu-btn');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      menuBtn?.addEventListener('click', () => {
+        sidebar?.setAttribute('data-open', '');
+        overlay?.setAttribute('data-open', '');
+      });
+
+      overlay?.addEventListener('click', () => {
+        sidebar?.removeAttribute('data-open');
+        overlay?.removeAttribute('data-open');
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    z-index: 40;
+  }
+
+  .mobile-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--color-rule);
+    position: sticky;
+    top: 0;
+    background-color: var(--color-bg);
+    z-index: 20;
+  }
+
+  .menu-btn {
+    background: none;
+    border: none;
+    color: var(--color-mute);
+    cursor: pointer;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    transition: color 0.12s;
+  }
+
+  .menu-btn:hover { color: var(--color-ink); }
+
+  .mobile-brand {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 44px;
+    border-top: 1px solid var(--color-rule);
+    margin-top: auto;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .footer-copy {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--color-mute);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 16px;
+  }
+
+  .footer-link {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: color 0.12s;
+  }
+
+  .footer-link:hover { color: var(--color-ink-2); }
+
+  @media (max-width: 768px) {
+    .mobile-bar { display: flex; }
+    .sidebar-overlay[data-open] { display: block; }
+
+    .site-footer {
+      padding: 14px 20px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

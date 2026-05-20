@@ -1,0 +1,496 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface RelatedEntry {
+  slug: string;
+  title: string;
+  type: string;
+  date: string;
+}
+
+interface Props {
+  title: string;
+  date: Date;
+  tags?: string[];
+  series?: string;
+  project?: string;
+  readingTime?: number;
+  type: string;
+  headings?: Heading[];
+  related?: RelatedEntry[];
+  ogImage?: string;
+}
+
+const { title, date, tags = [], series, project, readingTime, type, headings = [], related = [], ogImage } = Astro.props;
+const hasToc = headings.length > 0;
+
+const formattedDate = date.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<BaseLayout title={title} ogImage={ogImage}>
+  <!-- Read progress bar -->
+  <div class="read-progress" id="read-progress" aria-hidden="true">
+    <div class="read-progress-fill" id="read-progress-fill"></div>
+  </div>
+
+  <article class="article-wrap">
+    <header class="article-header">
+      <div class="article-breadcrumb">
+        <span class="breadcrumb-item"><a href="/">octa</a></span>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-item"><a href={`/type/${type}`}>{type}</a></span>
+        {project && (
+          <>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-item breadcrumb-project">
+              <a href={`/project/${project}`}>{project}</a>
+            </span>
+          </>
+        )}
+      </div>
+
+      <h1 class="article-title">{title}</h1>
+
+      <div class="article-meta">
+        <time datetime={date.toISOString()} class="meta-item">{formattedDate}</time>
+        {readingTime && <span class="meta-sep">·</span>}
+        {readingTime && <span class="meta-item">{readingTime} min read</span>}
+        {series && <span class="meta-sep">·</span>}
+        {series && <span class="meta-item">series: {series}</span>}
+      </div>
+
+      {tags.length > 0 && (
+        <ul class="tag-list" aria-label="Tags">
+          {tags.map(tag => <li class="tag">{tag}</li>)}
+        </ul>
+      )}
+    </header>
+
+    <div class:list={['article-body', { 'article-body--toc': hasToc }]}>
+      <div class="prose">
+        <slot />
+
+        {related.length > 0 && (
+          <section class="related-section" aria-label="Related articles">
+            <p class="related-label">Related</p>
+            <ul class="related-list">
+              {related.map(r => (
+                <li class="related-item">
+                  <a href={`/doc/${r.slug}`} class="related-link">
+                    <span class="related-title">{r.title}</span>
+                    <span class="related-meta">
+                      <span class="related-type">{r.type}</span>
+                      <span class="related-date">{r.date}</span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+
+      {hasToc && (
+        <aside class="article-toc" id="article-toc">
+          <p class="toc-label">Contents</p>
+          <nav aria-label="Table of contents">
+            <ul class="toc-list">
+              {headings.map(h => (
+                <li class:list={['toc-item', { 'toc-item--h3': h.depth === 3 }]}>
+                  <a href={`#${h.slug}`} class="toc-link" data-slug={h.slug}>
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div class="toc-progress">
+            <div class="toc-progress-track">
+              <div class="toc-progress-fill" id="toc-progress-fill"></div>
+            </div>
+            <span class="toc-progress-label" id="toc-progress-label">0%</span>
+          </div>
+        </aside>
+      )}
+    </div>
+  </article>
+</BaseLayout>
+
+<!-- Mermaid -->
+<script>
+  import mermaid from 'mermaid';
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+      primaryColor:        '#171c25',
+      primaryTextColor:    '#dde0e6',
+      primaryBorderColor:  'rgba(255,255,255,0.22)',
+      lineColor:           'rgba(255,255,255,0.35)',
+      mainBkg:             '#171c25',
+      secondaryColor:      '#0e1116',
+      tertiaryColor:       '#12161c',
+      edgeLabelBackground: '#12161c',
+      clusterBkg:          '#12161c',
+      fontFamily:          'Geist Mono, JetBrains Mono, ui-monospace, monospace',
+      fontSize:            '13px',
+    },
+  });
+
+  const mermaidPres = document.querySelectorAll<HTMLElement>('pre[data-language="mermaid"]');
+  let i = 0;
+  for (const pre of mermaidPres) {
+    const code = pre.textContent ?? '';
+    const wrap = document.createElement('div');
+    wrap.className = 'mermaid-wrap';
+    pre.replaceWith(wrap);
+    const { svg } = await mermaid.render(`mermaid-${i++}`, code);
+    wrap.innerHTML = svg;
+  }
+</script>
+
+<!-- Read progress + TOC active state -->
+<script>
+  const progressFill    = document.getElementById('read-progress-fill');
+  const tocProgressFill = document.getElementById('toc-progress-fill');
+  const tocProgressLabel = document.getElementById('toc-progress-label');
+  const prose           = document.querySelector<HTMLElement>('.prose');
+
+  function updateProgress() {
+    if (!prose) return;
+    const rect   = prose.getBoundingClientRect();
+    const total  = prose.offsetHeight - window.innerHeight;
+    const scrolled = Math.max(0, -rect.top);
+    const pct    = total > 0 ? Math.min(1, scrolled / total) : 0;
+    const pctStr = `${Math.round(pct * 100)}%`;
+
+    if (progressFill)    progressFill.style.width    = pctStr;
+    if (tocProgressFill) tocProgressFill.style.width  = pctStr;
+    if (tocProgressLabel) tocProgressLabel.textContent = pctStr;
+  }
+
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+  // TOC active heading via IntersectionObserver
+  const tocLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-link');
+  if (tocLinks.length > 0) {
+    const headingEls = document.querySelectorAll<HTMLElement>('.prose h2, .prose h3');
+    let activeSlug = '';
+
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          activeSlug = entry.target.id;
+        }
+      }
+      tocLinks.forEach(link => {
+        link.classList.toggle('toc-link--active', link.dataset.slug === activeSlug);
+      });
+    }, { rootMargin: '-10% 0% -80% 0%' });
+
+    headingEls.forEach(el => observer.observe(el));
+  }
+</script>
+
+<style>
+  /* ── Read progress bar ── */
+  .read-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-rule);
+    z-index: 100;
+  }
+
+  .read-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--color-accent);
+    transition: width 0.1s linear;
+  }
+
+  /* ── Article layout ── */
+  .article-wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  .article-header {
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .article-body {
+    /* single column default */
+  }
+
+  .article-body--toc {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 56px;
+    align-items: start;
+  }
+
+  /* ── Breadcrumb ── */
+  .article-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .breadcrumb-item a {
+    color: var(--color-mute);
+    text-decoration: none;
+    transition: color 0.12s;
+  }
+
+  .breadcrumb-item a:hover { color: var(--color-ink-2); }
+  .breadcrumb-sep { color: var(--color-mute-2); font-size: 9px; }
+  .breadcrumb-project a { color: var(--color-accent) !important; }
+
+  /* ── Header ── */
+  .article-title {
+    font-size: clamp(22px, 3.5vw, 30px);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    margin-bottom: 12px;
+    line-height: 1.25;
+  }
+
+  .article-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .meta-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-mute);
+  }
+
+  .meta-sep { color: var(--color-mute-2); font-size: 10px; }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--color-mute);
+    background: var(--color-panel);
+    border: 1px solid var(--color-rule-2);
+    padding: 2px 7px;
+  }
+
+  /* ── TOC ── */
+  .article-toc {
+    position: sticky;
+    top: 36px;
+  }
+
+  .toc-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+    margin: 0 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .toc-item { position: relative; }
+
+  .toc-link {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--color-mute);
+    text-decoration: none;
+    padding: 3px 0;
+    transition: color 0.12s;
+  }
+
+  .toc-item--h3 .toc-link {
+    padding-left: 10px;
+    font-size: 10.5px;
+  }
+
+  .toc-link:hover { color: var(--color-ink-2); }
+
+  .toc-link--active {
+    color: var(--color-accent) !important;
+  }
+
+  /* ── TOC progress ── */
+  .toc-progress {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-rule);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .toc-progress-track {
+    height: 3px;
+    background: var(--color-rule-2);
+    overflow: hidden;
+  }
+
+  .toc-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--color-accent);
+    transition: width 0.1s linear;
+  }
+
+  .toc-progress-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Related ── */
+  :global(.related-section) {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  :global(.related-label) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+    margin: 0 0 10px;
+  }
+
+  :global(.related-list) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  :global(.related-link) {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding-left: 10px;
+    transition: border-color 0.12s;
+  }
+
+  :global(.related-link:hover) {
+    border-left-color: var(--color-accent);
+  }
+
+  :global(.related-title) {
+    font-size: 13px;
+    color: var(--color-ink-2);
+    transition: color 0.12s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  :global(.related-link:hover .related-title) {
+    color: var(--color-ink);
+  }
+
+  :global(.related-meta) {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  :global(.related-type) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-accent);
+  }
+
+  :global(.related-date) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+  }
+
+  /* ── Mermaid ── */
+  :global(.mermaid-wrap) {
+    background: var(--color-panel);
+    border: 1px solid var(--color-rule);
+    padding: 20px 16px;
+    margin: 1.75rem 0;
+    overflow-x: auto;
+    text-align: center;
+  }
+
+  :global(.mermaid-wrap svg) {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 860px) {
+    .article-body--toc {
+      grid-template-columns: 1fr;
+    }
+
+    .article-toc {
+      display: none;
+    }
+  }
+</style>

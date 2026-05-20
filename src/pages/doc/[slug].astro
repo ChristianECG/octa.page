@@ -1,0 +1,73 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+
+const ALL_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+type DocType = typeof ALL_TYPES[number];
+
+export async function getStaticPaths() {
+  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+  const paths = await Promise.all(
+    types.map(async type => {
+      const entries = await getCollection(type, ({ data }) => data.status === 'published');
+      return entries.map(entry => ({
+        params: { slug: entry.id },
+        props:  { entry, type },
+      }));
+    })
+  );
+  return paths.flat();
+}
+
+const { entry, type } = Astro.props as { entry: any; type: DocType };
+const { Content, headings } = await render(entry);
+
+function estimateReadingTime(content: string): number {
+  return Math.max(1, Math.round(content.split(/\s+/).length / 200));
+}
+
+const { body } = entry as { body?: string };
+const readingTime = body ? estimateReadingTime(body) : undefined;
+
+const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
+
+// Compute related articles by shared tags + project + type
+const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+const allEntries = (await Promise.all(
+  types.map(async t => {
+    const entries = await getCollection(t, ({ data }) => data.status === 'published');
+    return entries.map(e => ({ entry: e, type: t as string }));
+  })
+)).flat().filter(({ entry: e }) => e.id !== entry.id);
+
+const entryTags: string[] = entry.data.tags ?? [];
+const scored = allEntries.map(({ entry: e, type: t }) => {
+  const sharedTags = (e.data.tags ?? []).filter((tag: string) => entryTags.includes(tag)).length;
+  const sameProject = entry.data.project && e.data.project === entry.data.project ? 2 : 0;
+  const sameType = t === type ? 1 : 0;
+  return { entry: e, type: t, score: sharedTags * 2 + sameProject + sameType };
+}).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+
+type RelatedEntry = { slug: string; title: string; type: string; date: string };
+const related: RelatedEntry[] = scored.map(({ entry: e, type: t }) => ({
+  slug:  e.id,
+  title: e.data.title,
+  type:  t,
+  date:  e.data.date.toISOString().split('T')[0],
+}));
+---
+
+<ArticleLayout
+  title={entry.data.title}
+  date={entry.data.date}
+  tags={entry.data.tags}
+  series={entry.data.series}
+  project={entry.data.project}
+  readingTime={readingTime}
+  type={type}
+  headings={tocHeadings}
+  related={related}
+  ogImage={`/og/doc/${entry.id}.png`}
+>
+  <Content />
+</ArticleLayout>

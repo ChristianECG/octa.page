@@ -1,0 +1,308 @@
+---
+---
+
+<div class="palette-overlay" id="palette-overlay" aria-hidden="true">
+  <div class="palette-modal" id="palette-modal" role="dialog" aria-modal="true" aria-label="Search notes">
+    <div class="palette-input-row">
+      <span class="palette-prefix">Ctrl+K›</span>
+      <input
+        type="text"
+        class="palette-input"
+        id="palette-input"
+        placeholder="Search notes..."
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <kbd class="palette-esc-chip">ESC</kbd>
+    </div>
+
+    <div class="palette-results" id="palette-results"></div>
+
+    <div class="palette-footer">
+      <span class="palette-hint"><kbd>↑↓</kbd> navigate</span>
+      <span class="palette-hint"><kbd>↵</kbd> open</span>
+      <span class="palette-hint"><kbd>ESC</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  type Entry = {
+    n: number;
+    slug: string;
+    title: string;
+    type: string;
+    tags: string[];
+    project: string | null;
+    date: string;
+  };
+
+  let searchIndex: Entry[] | null = null;
+  let selected = 0;
+  let hits: Entry[] = [];
+
+  const overlay = document.getElementById('palette-overlay')!;
+  const modal   = document.getElementById('palette-modal')!;
+  const input   = document.getElementById('palette-input') as HTMLInputElement;
+  const results = document.getElementById('palette-results')!;
+
+  async function loadIndex() {
+    if (searchIndex) return;
+    searchIndex = await fetch('/search.json').then(r => r.json());
+  }
+
+  function isOpen() { return overlay.style.display === 'flex'; }
+
+  function open() {
+    overlay.style.display = 'flex';
+    overlay.removeAttribute('aria-hidden');
+    document.body.style.overflow = 'hidden';
+    input.value = '';
+    input.focus();
+    loadIndex().then(() => render(''));
+  }
+
+  function close() {
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function filter(q: string): Entry[] {
+    if (!searchIndex) return [];
+    const lq = q.toLowerCase().trim();
+    const pool = lq ? searchIndex : searchIndex.slice(0, 9);
+    if (!lq) return pool;
+    return pool.filter(e =>
+      e.title.toLowerCase().includes(lq) ||
+      e.type.toLowerCase().includes(lq) ||
+      e.tags?.some(t => t.toLowerCase().includes(lq)) ||
+      e.project?.toLowerCase().includes(lq)
+    );
+  }
+
+  function hl(text: string, q: string): string {
+    const lq = q.toLowerCase().trim();
+    if (!lq) return text;
+    const i = text.toLowerCase().indexOf(lq);
+    if (i === -1) return text;
+    return text.slice(0, i) + `<mark>${text.slice(i, i + lq.length)}</mark>` + text.slice(i + lq.length);
+  }
+
+  function render(q: string) {
+    hits    = filter(q);
+    selected = 0;
+
+    if (!hits.length) {
+      results.innerHTML = `<p class="palette-empty">${q.trim() ? 'No results.' : 'Start typing to search&hellip;'}</p>`;
+      return;
+    }
+
+    results.innerHTML = hits.map((e, i) => `
+      <a href="/doc/${e.slug}" class="palette-result${i === 0 ? ' is-active' : ''}" data-i="${i}">
+        <span class="r-n">${String(e.n).padStart(2, '0')}</span>
+        <span class="r-title">${hl(e.title, q)}</span>
+        <span class="r-type">${e.type}</span>
+      </a>
+    `).join('');
+
+    results.querySelectorAll<HTMLElement>('.palette-result').forEach(el => {
+      el.addEventListener('mouseenter', () => setSelected(Number(el.dataset.i)));
+    });
+  }
+
+  function setSelected(i: number) {
+    selected = Math.max(0, Math.min(hits.length - 1, i));
+    results.querySelectorAll('.palette-result').forEach((el, idx) => {
+      el.classList.toggle('is-active', idx === selected);
+    });
+    results.querySelector('.is-active')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Global Ctrl/Cmd+K or /
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      isOpen() ? close() : open();
+      return;
+    }
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !['INPUT', 'TEXTAREA'].includes((e.target as Element).tagName)) {
+      e.preventDefault();
+      isOpen() ? close() : open();
+      return;
+    }
+    if (!isOpen()) return;
+    if (e.key === 'Escape')    { close(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSelected(selected + 1); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); setSelected(selected - 1); }
+    if (e.key === 'Enter' && hits[selected]) {
+      window.location.href = `/doc/${hits[selected].slug}`;
+    }
+  });
+
+  input.addEventListener('input', () => render(input.value));
+
+  overlay.addEventListener('click', e => {
+    if (!modal.contains(e.target as Node)) close();
+  });
+</script>
+
+<style>
+  .palette-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    z-index: 200;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+  }
+
+  .palette-modal {
+    width: 100%;
+    max-width: 680px;
+    background: var(--color-panel);
+    border: 1px solid var(--color-rule-2);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 70vh;
+  }
+
+  /* Input row */
+  .palette-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-rule);
+    flex-shrink: 0;
+  }
+
+  .palette-prefix {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-accent);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
+  .palette-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-ink);
+    caret-color: var(--color-accent);
+    min-width: 0;
+  }
+
+  .palette-input::placeholder {
+    color: var(--color-mute);
+  }
+
+  .palette-esc-chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    border: 1px solid var(--color-rule-2);
+    padding: 2px 6px;
+    flex-shrink: 0;
+  }
+
+  /* Results */
+  .palette-results {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule-2) transparent;
+  }
+
+  .palette-empty {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-mute);
+    padding: 16px;
+    margin: 0;
+  }
+
+  .palette-result {
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 16px;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: background 0.08s;
+    position: relative;
+  }
+
+  .palette-result.is-active {
+    background: rgba(255, 255, 255, 0.04);
+    border-left-color: var(--color-accent);
+  }
+
+  .r-n {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-mute-2);
+  }
+
+  .r-title {
+    font-size: 13px;
+    color: var(--color-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.palette-result mark) {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: inherit;
+  }
+
+  .r-type {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    white-space: nowrap;
+  }
+
+  /* Footer */
+  .palette-footer {
+    display: flex;
+    gap: 16px;
+    padding: 9px 16px;
+    border-top: 1px solid var(--color-rule);
+    flex-shrink: 0;
+  }
+
+  .palette-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .palette-hint kbd {
+    border: 1px solid var(--color-rule-2);
+    padding: 1px 5px;
+    font-family: inherit;
+    font-size: 10px;
+    color: var(--color-mute);
+  }
+
+  @media (max-width: 720px) {
+    .palette-modal { max-width: 100%; margin: 0 12px; }
+    .palette-overlay { padding-top: 6vh; }
+  }
+</style>

@@ -128,37 +128,37 @@ const formattedDate = date.toLocaleDateString('en-US', {
   </article>
 </BaseLayout>
 
-<!-- Mermaid -->
+<!-- Mermaid — loaded only when diagrams are present -->
 <script>
-  import mermaid from 'mermaid';
-
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: 'base',
-    themeVariables: {
-      primaryColor:        '#171c25',
-      primaryTextColor:    '#dde0e6',
-      primaryBorderColor:  'rgba(255,255,255,0.22)',
-      lineColor:           'rgba(255,255,255,0.35)',
-      mainBkg:             '#171c25',
-      secondaryColor:      '#0e1116',
-      tertiaryColor:       '#12161c',
-      edgeLabelBackground: '#12161c',
-      clusterBkg:          '#12161c',
-      fontFamily:          'Geist Mono, JetBrains Mono, ui-monospace, monospace',
-      fontSize:            '13px',
-    },
-  });
-
   const mermaidPres = document.querySelectorAll<HTMLElement>('pre[data-language="mermaid"]');
-  let i = 0;
-  for (const pre of mermaidPres) {
-    const code = pre.textContent ?? '';
-    const wrap = document.createElement('div');
-    wrap.className = 'mermaid-wrap';
-    pre.replaceWith(wrap);
-    const { svg } = await mermaid.render(`mermaid-${i++}`, code);
-    wrap.innerHTML = svg;
+  if (mermaidPres.length > 0) {
+    const mermaid = (await import('mermaid')).default;
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      themeVariables: {
+        primaryColor:        '#171c25',
+        primaryTextColor:    '#dde0e6',
+        primaryBorderColor:  'rgba(255,255,255,0.22)',
+        lineColor:           'rgba(255,255,255,0.35)',
+        mainBkg:             '#171c25',
+        secondaryColor:      '#0e1116',
+        tertiaryColor:       '#12161c',
+        edgeLabelBackground: '#12161c',
+        clusterBkg:          '#12161c',
+        fontFamily:          'Geist Mono, JetBrains Mono, ui-monospace, monospace',
+        fontSize:            '13px',
+      },
+    });
+    let i = 0;
+    for (const pre of mermaidPres) {
+      const code = pre.textContent ?? '';
+      const wrap = document.createElement('div');
+      wrap.className = 'mermaid-wrap';
+      pre.replaceWith(wrap);
+      const { svg } = await mermaid.render(`mermaid-${i++}`, code);
+      wrap.innerHTML = svg;
+    }
   }
 </script>
 
@@ -235,10 +235,12 @@ const formattedDate = date.toLocaleDateString('en-US', {
     margin-bottom: 3rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--color-rule);
+    animation: fade-up 220ms ease-out both;
   }
 
   .article-body {
-    /* single column default */
+    animation: fade-up 220ms ease-out both;
+    animation-delay: 80ms;
   }
 
   .article-body--toc {

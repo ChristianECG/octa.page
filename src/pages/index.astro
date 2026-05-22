@@ -1,8 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-const ALL_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+import { ALL_TYPES } from '../lib/types';
+import { readingLabel } from '../lib/utils';
 
 const allEntries = (await Promise.all(
   ALL_TYPES.map(async t => {
@@ -10,11 +10,6 @@ const allEntries = (await Promise.all(
     return entries.map(e => ({ entry: e, type: t }));
   })
 )).flat().sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());
-
-function readingTime(body?: string): string {
-  if (!body) return '—';
-  return `${Math.max(1, Math.round(body.split(/\s+/).length / 200))}m`;
-}
 
 const year = new Date().getFullYear();
 ---
@@ -51,6 +46,7 @@ const year = new Date().getFullYear();
           {allEntries.map(({ entry, type }, i) => (
             <tr
               class="entry-row"
+              style={`--i: ${i}`}
               data-month={`${entry.data.date.getFullYear()}-${String(entry.data.date.getMonth() + 1).padStart(2, '0')}`}
               data-pinned={entry.data.pinned ? 'true' : 'false'}
             >
@@ -64,7 +60,7 @@ const year = new Date().getFullYear();
               <td class="cell-type">
                 <a href={`/type/${type}`} class="type-link">{type}</a>
               </td>
-              <td class="cell-read">{readingTime((entry as any).body)}</td>
+              <td class="cell-read">{readingLabel((entry as any).body)}</td>
             </tr>
           ))}
         </tbody>
@@ -81,6 +77,22 @@ const year = new Date().getFullYear();
     padding-bottom: 12px;
     border-bottom: 1px solid var(--color-rule);
     margin-bottom: 28px;
+    animation: fade-up 200ms ease-out both;
+  }
+
+  .hero {
+    animation: fade-up 200ms ease-out both;
+    animation-delay: 50ms;
+  }
+
+  .table-wrap {
+    animation: fade-up 200ms ease-out both;
+    animation-delay: 90ms;
+  }
+
+  .entry-row {
+    animation: fade-up 180ms ease-out both;
+    animation-delay: min(calc(var(--i) * 25ms + 110ms), 380ms);
   }
 
   .strip-left, .strip-right {

@@ -1,9 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
 import ArticleLayout from '../../layouts/ArticleLayout.astro';
-
-const ALL_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
-type DocType = typeof ALL_TYPES[number];
+import { ALL_TYPES, type DocType } from '../../lib/types';
+import { readingMinutes } from '../../lib/utils';
 
 export async function getStaticPaths() {
   const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
@@ -22,19 +21,14 @@ export async function getStaticPaths() {
 const { entry, type } = Astro.props as { entry: any; type: DocType };
 const { Content, headings } = await render(entry);
 
-function estimateReadingTime(content: string): number {
-  return Math.max(1, Math.round(content.split(/\s+/).length / 200));
-}
-
 const { body } = entry as { body?: string };
-const readingTime = body ? estimateReadingTime(body) : undefined;
+const readingTime = readingMinutes(body);
 
 const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
 
 // Compute related articles by shared tags + project + type
-const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
 const allEntries = (await Promise.all(
-  types.map(async t => {
+  ALL_TYPES.map(async t => {
     const entries = await getCollection(t, ({ data }) => data.status === 'published');
     return entries.map(e => ({ entry: e, type: t as string }));
   })

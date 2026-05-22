@@ -1,13 +1,16 @@
 ---
 import { getCollection } from 'astro:content';
+import { ALL_TYPES, NAV_TYPES } from '../lib/types';
 
-const ALL_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
-const NAV_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
-
-const [publishedEntries, allEntriesRaw] = await Promise.all([
-  Promise.all(ALL_TYPES.map(c => getCollection(c, ({ data }) => data.status === 'published'))).then(r => r.flat()),
+const [publishedWithType, allEntriesRaw] = await Promise.all([
+  Promise.all(ALL_TYPES.map(async c => {
+    const entries = await getCollection(c, ({ data }) => data.status === 'published');
+    return entries.map(e => ({ entry: e, type: c }));
+  })).then(r => r.flat()),
   Promise.all(ALL_TYPES.map(c => getCollection(c))).then(r => r.flat()),
 ]);
+
+const publishedEntries = publishedWithType.map(({ entry }) => entry);
 
 const now = new Date();
 const thisMonthEntries = publishedEntries.filter(e => {
@@ -19,9 +22,7 @@ const draftEntries  = allEntriesRaw.filter(e => e.data.status === 'draft');
 const totalEntries  = publishedEntries.length;
 
 const typeCounts = Object.fromEntries(
-  await Promise.all(
-    NAV_TYPES.map(async t => [t, (await getCollection(t, ({ data }) => data.status === 'published')).length])
-  )
+  NAV_TYPES.map(t => [t, publishedWithType.filter(({ type }) => type === t).length])
 );
 
 const typeList = NAV_TYPES.map(t => ({

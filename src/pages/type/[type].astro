@@ -1,18 +1,17 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-
-const TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
-type DocType = typeof TYPES[number];
+import { type NavType } from '../../lib/types';
+import { readingLabel } from '../../lib/utils';
 
 export async function getStaticPaths() {
   const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
   return types.map(type => ({ params: { type } }));
 }
 
-const { type } = Astro.params as { type: DocType };
+const { type } = Astro.params as { type: NavType };
 
-const labels: Record<DocType, string> = {
+const labels: Record<NavType, string> = {
   architecture: 'Architecture',
   runtime:      'Runtime',
   pulse:        'Pulse',
@@ -23,11 +22,6 @@ const labels: Record<DocType, string> = {
 const entries = await getCollection(type, ({ data }) => data.status === 'published');
 const sorted  = entries.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 const label   = labels[type];
-
-function readingTime(body?: string): string {
-  if (!body) return '—';
-  return `${Math.max(1, Math.round(body.split(/\s+/).length / 200))}m`;
-}
 ---
 
 <BaseLayout title={label} ogImage={`/og/type/${type}.png`}>
@@ -55,7 +49,7 @@ function readingTime(body?: string): string {
         </thead>
         <tbody>
           {sorted.map((entry, i) => (
-            <tr class="entry-row">
+            <tr class="entry-row" style={`--i: ${i}`}>
               <td class="cell-n">{String(i + 1).padStart(2, '0')}</td>
               <td class="cell-date">
                 {entry.data.date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' })}
@@ -63,7 +57,7 @@ function readingTime(body?: string): string {
               <td class="cell-title">
                 <a href={`/doc/${entry.id}`} class="entry-link">{entry.data.title}</a>
               </td>
-              <td class="cell-read">{readingTime((entry as any).body)}</td>
+              <td class="cell-read">{readingLabel((entry as any).body)}</td>
             </tr>
           ))}
         </tbody>
@@ -80,6 +74,22 @@ function readingTime(body?: string): string {
     padding-bottom: 12px;
     border-bottom: 1px solid var(--color-rule);
     margin-bottom: 28px;
+    animation: fade-up 200ms ease-out both;
+  }
+
+  .hero {
+    animation: fade-up 200ms ease-out both;
+    animation-delay: 50ms;
+  }
+
+  .table-wrap {
+    animation: fade-up 200ms ease-out both;
+    animation-delay: 90ms;
+  }
+
+  .entry-row {
+    animation: fade-up 180ms ease-out both;
+    animation-delay: min(calc(var(--i) * 25ms + 110ms), 380ms);
   }
 
   .strip-left, .strip-right {

@@ -8,13 +8,16 @@ const fontSans400 = readFileSync(join(root, 'node_modules/geist/dist/fonts/geist
 const fontSans500 = readFileSync(join(root, 'node_modules/geist/dist/fonts/geist-sans/Geist-Medium.ttf'));
 const fontMono400 = readFileSync(join(root, 'node_modules/geist/dist/fonts/geist-mono/GeistMono-Regular.ttf'));
 
+// accent is the hex equivalent of --color-accent: oklch(74% 0.07 240) in global.css
+export const ACCENT_HEX = '#8fabc8';
+
 const C = {
   bg:     '#0e1116',
   ink:    '#dde0e6',
   ink2:   '#a0a6ae',
   mute:   '#5e6670',
   rule:   'rgba(255,255,255,0.06)',
-  accent: '#8fabc8',
+  accent: ACCENT_HEX,
 } as const;
 
 type Node = { type: string; props: Record<string, any> };

@@ -1,11 +1,12 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import { generateOG } from '../../../lib/og';
+import { ALL_TYPES } from '../../../lib/types';
+import { readingMinutes } from '../../../lib/utils';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
   const paths = await Promise.all(
-    types.map(async type => {
+    ALL_TYPES.map(async type => {
       const entries = await getCollection(type, ({ data }) => data.status === 'published');
       return entries.map(entry => ({
         params: { slug: entry.id },
@@ -19,8 +20,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const GET: APIRoute = async ({ props }) => {
   const { entry, type } = props as any;
 
-  const body: string | undefined = entry.body;
-  const readTime = body ? Math.max(1, Math.round(body.split(/\s+/).length / 200)) : undefined;
+  const readTime = readingMinutes(entry.body);
 
   const label = entry.data.project ? `${type} · ${entry.data.project}` : type;
   const date  = entry.data.date.toISOString().split('T')[0];

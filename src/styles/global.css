@@ -146,6 +146,7 @@ pre {
   padding: 16px 20px;
   overflow-x: auto;
   margin: 1.5rem 0;
+  max-width: 100%;
 }
 
 pre code {
@@ -176,6 +177,7 @@ hr {
   line-height: 1.7;
   max-width: 64ch;
   color: var(--color-ink-2);
+  min-width: 0;
 }
 
 .prose p { margin: 1.1rem 0; }
@@ -260,6 +262,20 @@ tr:last-child td { border-bottom: none; }
   color: #86efac;
   overflow-x: auto;
   line-height: 1.65;
+}
+
+/* ── Animations ── */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes fade-up {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
 }
 
 /* ── Utility ── */

@@ -1,8 +1,9 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import { generateOG } from '../../../lib/og';
+import { NAV_TYPES } from '../../../lib/types';
 
-const TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
+const TYPES = NAV_TYPES;
 
 const descriptions: Record<string, string> = {
   architecture: 'System design decisions, tradeoffs, and architectural reasoning.',

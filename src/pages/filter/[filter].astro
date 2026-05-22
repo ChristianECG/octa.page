@@ -1,9 +1,16 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { ALL_TYPES } from '../lib/types';
-import { readingLabel } from '../lib/utils';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { ALL_TYPES } from '../../lib/types';
+import { readingLabel } from '../../lib/utils';
 
+export async function getStaticPaths() {
+  return ['month', 'pinned'].map(filter => ({ params: { filter } }));
+}
+
+const { filter } = Astro.params as { filter: 'month' | 'pinned' };
+
+const now = new Date();
 const allEntries = (await Promise.all(
   ALL_TYPES.map(async t => {
     const entries = await getCollection(t, ({ data }) => data.status === 'published');
@@ -11,25 +18,29 @@ const allEntries = (await Promise.all(
   })
 )).flat().sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());
 
-const year = new Date().getFullYear();
+const filtered = filter === 'month'
+  ? allEntries.filter(({ entry: e }) => {
+      const d = e.data.date;
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    })
+  : allEntries.filter(({ entry: e }) => e.data.pinned);
+
+const labels = { month: 'This month', pinned: 'Pinned' };
+const label = labels[filter];
 ---
 
-<BaseLayout title="Octa" ogImage="/og/index.png">
-  <div class="top-strip" id="top-strip">
-    <span class="strip-left" id="strip-left">octa · index · {year}</span>
-    <span class="strip-right">sort: newest ↓</span>
+<BaseLayout title={label}>
+  <div class="top-strip">
+    <span class="strip-left">octa · {label.toLowerCase()} · {now.getFullYear()}</span>
+    <span class="strip-right">{filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}</span>
   </div>
 
   <div class="hero">
-    <h1 class="hero-title">Systems notes &amp; runtime investigations.</h1>
-    <p class="hero-deck">
-      An engineering lab documenting architecture decisions, runtime research, and performance investigations.
-      <strong class="hero-count">{allEntries.length} {allEntries.length === 1 ? 'entry' : 'entries'}</strong> indexed.
-    </p>
+    <h1 class="hero-title">{label}</h1>
   </div>
 
-  {allEntries.length === 0 ? (
-    <p class="empty">No entries yet. Add markdown files to <code>/content/</code>.</p>
+  {filtered.length === 0 ? (
+    <p class="empty">No entries.</p>
   ) : (
     <div class="table-wrap">
       <table class="entries-table">
@@ -43,7 +54,7 @@ const year = new Date().getFullYear();
           </tr>
         </thead>
         <tbody>
-          {allEntries.map(({ entry, type }, i) => (
+          {filtered.map(({ entry, type }, i) => (
             <tr class="entry-row" style={`--i: ${i}`}>
               <td class="cell-n">{String(i + 1).padStart(2, '0')}</td>
               <td class="cell-date">
@@ -99,8 +110,8 @@ const year = new Date().getFullYear();
   }
 
   .hero {
-    margin-bottom: 36px;
-    padding-bottom: 28px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--color-rule);
   }
 
@@ -109,29 +120,11 @@ const year = new Date().getFullYear();
     font-weight: 500;
     letter-spacing: -0.015em;
     color: var(--color-ink);
-    margin-bottom: 10px;
-  }
-
-  .hero-deck {
-    font-size: 13px;
-    color: var(--color-ink-2);
-    max-width: 60ch;
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  .hero-count {
-    font-weight: 500;
-    color: var(--color-ink);
   }
 
   .table-wrap { overflow-x: auto; }
 
-  .entries-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 520px;
-  }
+  .entries-table { width: 100%; border-collapse: collapse; min-width: 520px; }
 
   .col-n    { width: 44px; }
   .col-date { width: 96px; }
@@ -143,74 +136,19 @@ const year = new Date().getFullYear();
   .entry-row:hover .cell-date,
   .entry-row:hover .cell-n { color: var(--color-ink); }
 
-  .cell-n {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-mute);
-    transition: color 0.12s;
-  }
+  .cell-n    { font-family: var(--font-mono); font-size: 11px; color: var(--color-mute); transition: color 0.12s; }
+  .cell-date { font-family: var(--font-mono); font-size: 11px; color: var(--color-ink-2); white-space: nowrap; transition: color 0.12s; }
+  .cell-title { font-size: 13px; color: var(--color-ink); transition: color 0.12s; }
 
-  .cell-date {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-ink-2);
-    white-space: nowrap;
-    transition: color 0.12s;
-  }
-
-  .cell-title {
-    font-size: 13px;
-    color: var(--color-ink);
-    transition: color 0.12s;
-  }
-
-  .entry-link {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .entry-link::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-  }
-
+  .entry-link { color: inherit; text-decoration: none; }
+  .entry-link::after { content: ''; position: absolute; inset: 0; }
   tr { position: relative; }
 
-  .cell-type {
-    font-family: var(--font-mono);
-    font-size: 11px;
-  }
-
-  .type-link {
-    color: var(--color-accent);
-    text-decoration: none;
-    position: relative;
-    z-index: 1;
-    transition: opacity 0.12s;
-  }
-
+  .cell-type { font-family: var(--font-mono); font-size: 11px; }
+  .type-link { color: var(--color-accent); text-decoration: none; position: relative; z-index: 1; transition: opacity 0.12s; }
   .type-link:hover { opacity: 0.8; }
 
-  .cell-read {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-mute);
-    text-align: right;
-  }
+  .cell-read { font-family: var(--font-mono); font-size: 11px; color: var(--color-mute); text-align: right; }
 
-  .empty {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--color-mute);
-    padding: 24px 0;
-  }
-
-  .empty code {
-    font-size: 11px;
-    background: var(--color-panel);
-    border: 1px solid var(--color-rule-2);
-    padding: 1px 5px;
-  }
+  .empty { font-family: var(--font-mono); font-size: 12px; color: var(--color-mute); padding: 24px 0; }
 </style>
-

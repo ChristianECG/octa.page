@@ -75,7 +75,11 @@ const formattedDate = date.toLocaleDateString('en-US', {
 
       {tags.length > 0 && (
         <ul class="tag-list" aria-label="Tags">
-          {tags.map(tag => <li class="tag">{tag}</li>)}
+          {tags.map(tag => (
+            <li class="tag">
+              <a href={`/tag/${tag}`} class="tag-link">{tag}</a>
+            </li>
+          ))}
         </ul>
       )}
     </header>
@@ -366,6 +370,16 @@ const formattedDate = date.toLocaleDateString('en-US', {
     background: var(--color-panel);
     border: 1px solid var(--color-rule-2);
     padding: 2px 7px;
+  }
+
+  .tag-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.12s;
+  }
+
+  .tag-link:hover {
+    color: var(--color-ink-2);
   }
 
   /* ── TOC ── */

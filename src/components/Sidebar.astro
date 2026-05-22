@@ -68,14 +68,14 @@ const pathname = Astro.url.pathname;
           </a>
         </li>
         <li>
-          <a href="/?filter=month" class="nav-item">
+          <a href="/filter/month" class:list={['nav-item', { active: pathname === '/filter/month' }]}>
             <span>This month</span>
             <span class="nav-count">{thisMonthEntries.length}</span>
           </a>
         </li>
         {pinnedEntries.length > 0 && (
           <li>
-            <a href="/?filter=pinned" class="nav-item">
+            <a href="/filter/pinned" class:list={['nav-item', { active: pathname === '/filter/pinned' }]}>
               <span>Pinned</span>
               <span class="nav-count">{pinnedEntries.length}</span>
             </a>

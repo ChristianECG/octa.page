@@ -105,13 +105,16 @@ const formattedDate = date.toLocaleDateString('en-US', {
       </div>
 
       {hasToc && (
-        <aside class="article-toc" id="article-toc">
+        <aside class="article-toc" id="article-toc" data-reading-time={readingTime ?? 0}>
           <div class="toc-progress">
             <p class="toc-label">Progress</p>
             <div class="toc-progress-track">
               <div class="toc-progress-fill" id="toc-progress-fill"></div>
             </div>
-            <span class="toc-progress-label" id="toc-progress-label">0%</span>
+            <div class="toc-progress-stats">
+              <span class="toc-progress-label" id="toc-progress-label">0%</span>
+              {readingTime && <span class="toc-progress-remaining" id="toc-progress-remaining">~{readingTime}m remaining</span>}
+            </div>
           </div>
 
           <div class="toc-section">
@@ -142,9 +145,10 @@ const formattedDate = date.toLocaleDateString('en-US', {
             </div>
           )}
 
-          <button class="copy-btn" id="copy-btn" aria-label="Copy link to article">
-            Copy link
-          </button>
+          <div class="toc-actions">
+            <button class="copy-btn" id="copy-btn" aria-label="Copy link to article">Copy link</button>
+            <button class="copy-btn" id="print-btn" aria-label="Print article">Print / save pdf</button>
+          </div>
         </aside>
       )}
     </div>
@@ -178,7 +182,8 @@ const formattedDate = date.toLocaleDateString('en-US', {
       const code = pre.textContent ?? '';
       const wrap = document.createElement('div');
       wrap.className = 'mermaid-wrap';
-      pre.replaceWith(wrap);
+      pre.classList.add('mermaid-src');
+      pre.after(wrap);
       const { svg } = await mermaid.render(`mermaid-${i++}`, code);
       wrap.innerHTML = svg;
     }
@@ -187,22 +192,29 @@ const formattedDate = date.toLocaleDateString('en-US', {
 
 <!-- Read progress + TOC active state -->
 <script>
-  const progressFill    = document.getElementById('read-progress-fill');
-  const tocProgressFill = document.getElementById('toc-progress-fill');
-  const tocProgressLabel = document.getElementById('toc-progress-label');
-  const prose           = document.querySelector<HTMLElement>('.prose');
+  const progressFill      = document.getElementById('read-progress-fill');
+  const tocProgressFill   = document.getElementById('toc-progress-fill');
+  const tocProgressLabel  = document.getElementById('toc-progress-label');
+  const tocRemaining      = document.getElementById('toc-progress-remaining');
+  const prose             = document.querySelector<HTMLElement>('.prose');
+  const totalMin          = Number(document.getElementById('article-toc')?.dataset.readingTime ?? 0);
 
   function updateProgress() {
     if (!prose) return;
-    const rect   = prose.getBoundingClientRect();
-    const total  = prose.offsetHeight - window.innerHeight;
+    const rect    = prose.getBoundingClientRect();
+    const total   = prose.offsetHeight - window.innerHeight;
     const scrolled = Math.max(0, -rect.top);
-    const pct    = total > 0 ? Math.min(1, scrolled / total) : 0;
-    const pctStr = `${Math.round(pct * 100)}%`;
+    const pct     = total > 0 ? Math.min(1, scrolled / total) : 0;
+    const pctStr  = `${Math.round(pct * 100)}%`;
 
-    if (progressFill)    progressFill.style.width    = pctStr;
+    if (progressFill)   progressFill.style.width     = pctStr;
     if (tocProgressFill) tocProgressFill.style.width  = pctStr;
     if (tocProgressLabel) tocProgressLabel.textContent = pctStr;
+
+    if (tocRemaining && totalMin > 0) {
+      const left = Math.ceil(totalMin * (1 - pct));
+      tocRemaining.textContent = pct >= 0.99 ? 'done' : `~${left}m remaining`;
+    }
   }
 
   window.addEventListener('scroll', updateProgress, { passive: true });
@@ -237,11 +249,13 @@ const formattedDate = date.toLocaleDateString('en-US', {
       copyBtn.textContent = 'copied';
       copyBtn.classList.add('copy-btn--done');
       setTimeout(() => {
-        copyBtn.textContent = 'copy link';
+        copyBtn.textContent = 'Copy link';
         copyBtn.classList.remove('copy-btn--done');
       }, 1500);
     });
   }
+
+  document.getElementById('print-btn')?.addEventListener('click', () => window.print());
 </script>
 
 <style>
@@ -515,6 +529,27 @@ const formattedDate = date.toLocaleDateString('en-US', {
     color: var(--color-mute);
   }
 
+  /* ── Progress stats row ── */
+  .toc-progress-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .toc-progress-remaining {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Action buttons ── */
+  .toc-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
   /* ── Copy link button ── */
   .copy-btn {
     width: 100%;
@@ -541,6 +576,8 @@ const formattedDate = date.toLocaleDateString('en-US', {
   }
 
   /* ── Mermaid ── */
+  :global(.mermaid-src) { display: none; }
+
   :global(.mermaid-wrap) {
     background: var(--color-panel);
     border: 1px solid var(--color-rule);
@@ -555,6 +592,11 @@ const formattedDate = date.toLocaleDateString('en-US', {
     height: auto;
   }
 
+  @media print {
+    :global(.mermaid-wrap) { display: none !important; }
+    :global(.mermaid-src)  { display: block !important; }
+  }
+
   /* ── Mobile ── */
   @media (max-width: 860px) {
     .article-body--toc {
@@ -563,6 +605,20 @@ const formattedDate = date.toLocaleDateString('en-US', {
 
     .article-toc {
       display: none;
+    }
+  }
+
+  /* ── Print ── */
+  @media print {
+    .read-progress,
+    .article-toc   { display: none; }
+
+    .article-body--toc {
+      grid-template-columns: 1fr;
+    }
+
+    .prose {
+      max-width: 100%;
     }
   }
 </style>

@@ -21,13 +21,14 @@ interface Props {
   series?: string;
   project?: string;
   readingTime?: number;
+  wordCount?: number;
   type: string;
   headings?: Heading[];
   related?: RelatedEntry[];
   ogImage?: string;
 }
 
-const { title, date, tags = [], series, project, readingTime, type, headings = [], related = [], ogImage } = Astro.props;
+const { title, date, tags = [], series, project, readingTime, wordCount, type, headings = [], related = [], ogImage } = Astro.props;
 const hasToc = headings.length > 0;
 
 const formattedDate = date.toLocaleDateString('en-US', {
@@ -66,6 +67,8 @@ const formattedDate = date.toLocaleDateString('en-US', {
         <time datetime={date.toISOString()} class="meta-item">{formattedDate}</time>
         {readingTime && <span class="meta-sep">·</span>}
         {readingTime && <span class="meta-item">{readingTime} min read</span>}
+        {wordCount && <span class="meta-sep">·</span>}
+        {wordCount && <span class="meta-item">{wordCount.toLocaleString()} words</span>}
         {series && <span class="meta-sep">·</span>}
         {series && <span class="meta-item">series: {series}</span>}
       </div>
@@ -81,7 +84,7 @@ const formattedDate = date.toLocaleDateString('en-US', {
       <div class="prose">
         <slot />
 
-        {related.length > 0 && (
+        {!hasToc && related.length > 0 && (
           <section class="related-section" aria-label="Related articles">
             <p class="related-label">Related</p>
             <ul class="related-list">
@@ -103,25 +106,45 @@ const formattedDate = date.toLocaleDateString('en-US', {
 
       {hasToc && (
         <aside class="article-toc" id="article-toc">
-          <p class="toc-label">Contents</p>
-          <nav aria-label="Table of contents">
-            <ul class="toc-list">
-              {headings.map(h => (
-                <li class:list={['toc-item', { 'toc-item--h3': h.depth === 3 }]}>
-                  <a href={`#${h.slug}`} class="toc-link" data-slug={h.slug}>
-                    {h.text}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
           <div class="toc-progress">
+            <p class="toc-label">Progress</p>
             <div class="toc-progress-track">
               <div class="toc-progress-fill" id="toc-progress-fill"></div>
             </div>
             <span class="toc-progress-label" id="toc-progress-label">0%</span>
           </div>
+
+          <div class="toc-section">
+            <p class="toc-label">Contents</p>
+            <nav aria-label="Table of contents">
+              <ul class="toc-list">
+                {headings.map(h => (
+                  <li class:list={['toc-item', { 'toc-item--h3': h.depth === 3 }]}>
+                    <a href={`#${h.slug}`} class="toc-link" data-slug={h.slug}>
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+
+          {related.length > 0 && (
+            <div class="toc-section">
+              <p class="toc-label">Related</p>
+              <ul class="toc-list">
+                {related.map(r => (
+                  <li class="toc-item">
+                    <a href={`/doc/${r.slug}`} class="toc-link">{r.title}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <button class="copy-btn" id="copy-btn" aria-label="Copy link to article">
+            Copy link
+          </button>
         </aside>
       )}
     </div>
@@ -203,6 +226,21 @@ const formattedDate = date.toLocaleDateString('en-US', {
     }, { rootMargin: '-10% 0% -80% 0%' });
 
     headingEls.forEach(el => observer.observe(el));
+  }
+</script>
+
+<script>
+  const copyBtn = document.getElementById('copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(window.location.href);
+      copyBtn.textContent = 'copied';
+      copyBtn.classList.add('copy-btn--done');
+      setTimeout(() => {
+        copyBtn.textContent = 'copy link';
+        copyBtn.classList.remove('copy-btn--done');
+      }, 1500);
+    });
   }
 </script>
 
@@ -320,6 +358,14 @@ const formattedDate = date.toLocaleDateString('en-US', {
   .article-toc {
     position: sticky;
     top: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .toc-section {
+    display: flex;
+    flex-direction: column;
   }
 
   .toc-label {
@@ -351,7 +397,7 @@ const formattedDate = date.toLocaleDateString('en-US', {
     line-height: 1.5;
     color: var(--color-mute);
     text-decoration: none;
-    padding: 3px 0;
+    padding: 5px 0;
     transition: color 0.12s;
   }
 
@@ -366,18 +412,23 @@ const formattedDate = date.toLocaleDateString('en-US', {
     color: var(--color-accent) !important;
   }
 
-  /* ── TOC progress ── */
+  /* ── TOC progress (top of column) ── */
   .toc-progress {
-    margin-top: 20px;
-    padding-top: 12px;
-    border-top: 1px solid var(--color-rule);
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+
+  .toc-progress-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-mute);
+    letter-spacing: 0.06em;
   }
 
   .toc-progress-track {
-    height: 3px;
+    height: 2px;
     background: var(--color-rule-2);
     overflow: hidden;
   }
@@ -389,12 +440,6 @@ const formattedDate = date.toLocaleDateString('en-US', {
     transition: width 0.1s linear;
   }
 
-  .toc-progress-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--color-mute);
-    letter-spacing: 0.06em;
-  }
 
   /* ── Related ── */
   :global(.related-section) {
@@ -468,6 +513,31 @@ const formattedDate = date.toLocaleDateString('en-US', {
     font-family: var(--font-mono);
     font-size: 10px;
     color: var(--color-mute);
+  }
+
+  /* ── Copy link button ── */
+  .copy-btn {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--color-rule-2);
+    padding: 6px 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--color-mute);
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+
+  .copy-btn:hover {
+    color: var(--color-ink-2);
+    border-color: var(--color-rule-2);
+  }
+
+  .copy-btn--done {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
   }
 
   /* ── Mermaid ── */

@@ -23,6 +23,7 @@ const { Content, headings } = await render(entry);
 
 const { body } = entry as { body?: string };
 const readingTime = readingMinutes(body);
+const wordCount   = body ? body.split(/\s+/).filter(Boolean).length : undefined;
 
 const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
 
@@ -40,7 +41,7 @@ const scored = allEntries.map(({ entry: e, type: t }) => {
   const sameProject = entry.data.project && e.data.project === entry.data.project ? 2 : 0;
   const sameType = t === type ? 1 : 0;
   return { entry: e, type: t, score: sharedTags * 2 + sameProject + sameType };
-}).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+}).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 4);
 
 type RelatedEntry = { slug: string; title: string; type: string; date: string };
 const related: RelatedEntry[] = scored.map(({ entry: e, type: t }) => ({
@@ -58,6 +59,7 @@ const related: RelatedEntry[] = scored.map(({ entry: e, type: t }) => ({
   series={entry.data.series}
   project={entry.data.project}
   readingTime={readingTime}
+  wordCount={wordCount}
   type={type}
   headings={tocHeadings}
   related={related}

@@ -246,7 +246,7 @@ const formattedDate = date.toLocaleDateString('en-US', {
   if (copyBtn) {
     copyBtn.addEventListener('click', async () => {
       await navigator.clipboard.writeText(window.location.href);
-      copyBtn.textContent = 'copied';
+      copyBtn.textContent = 'Copied';
       copyBtn.classList.add('copy-btn--done');
       setTimeout(() => {
         copyBtn.textContent = 'Copy link';

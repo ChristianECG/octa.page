@@ -15,6 +15,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check-content:
+    runs-on: ubuntu-latest
+    outputs:
+      md_changed: ${{ steps.check.outputs.md_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: check
+        run: |
+          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q '\.md$'; then
+            echo "md_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "md_changed=false" >> $GITHUB_OUTPUT
+          fi
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -48,3 +64,16 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  trigger-christianecg:
+    needs: [deploy, check-content]
+    if: needs.check-content.outputs.md_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger christianecg.com rebuild
+        run: |
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.CHRISTIANECG_DEPLOY_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/ChristianECG/christianecg.com/dispatches \
+            -d '{"event_type":"octa-deployed"}'

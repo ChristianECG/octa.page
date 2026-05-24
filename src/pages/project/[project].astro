@@ -4,6 +4,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { ALL_TYPES } from '../../lib/types';
 import { readingLabel } from '../../lib/utils';
 
+const PROJECT_URLS: Record<string, string> = {
+  avelor: 'https://avelor.es',
+  'gob.co.nz': 'https://gob.co.nz',
+};
+
 export async function getStaticPaths() {
   const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
   const allEntries = (await Promise.all(
@@ -32,6 +37,9 @@ const allEntries = (await Promise.all(
 
   <div class="hero">
     <h1 class="hero-title">{project}</h1>
+    {PROJECT_URLS[project] && (
+      <a href={PROJECT_URLS[project]} class="hero-url" target="_blank" rel="noopener">{PROJECT_URLS[project].replace('https://', '')}</a>
+    )}
   </div>
 
   {allEntries.length === 0 ? (
@@ -117,6 +125,20 @@ const allEntries = (await Promise.all(
     color: var(--color-ink);
     text-transform: capitalize;
   }
+
+  .hero-url {
+    display: inline-block;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-accent);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    opacity: 0.8;
+    transition: opacity 0.12s;
+  }
+
+  .hero-url:hover { opacity: 1; }
 
   .table-wrap { overflow-x: auto; }
 

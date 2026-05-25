@@ -8,7 +8,7 @@ tags:
   - knowledge-graph
   - schema-org
 pinned: false
-status: draft
+status: published
 ---
 
 When a brand name is shared by multiple unrelated entities — a watch retailer, a consulting firm, a capital fund — Google has no reliable way to determine which result belongs to which entity unless the sites themselves publish structured signals. For a minimal site with a single indexed page, the problem is acute: no content volume, no backlink density, no topical authority. The only lever is the entity graph.

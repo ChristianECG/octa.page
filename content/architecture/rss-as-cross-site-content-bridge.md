@@ -8,7 +8,7 @@ tags:
   - github-actions
   - ci-cd
   - architecture
-status: draft
+status: published
 pinned: false
 ---
 

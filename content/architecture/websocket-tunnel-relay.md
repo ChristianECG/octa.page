@@ -8,7 +8,7 @@ tags:
   - architecture
 project: avelor
 status: published
-pinned: false
+pinned: true
 ---
 
 A tunnel that exposes `localhost:3000` at a public HTTPS URL doesn't need SSH. A WebSocket relay achieves the same result with nothing but an outbound connection from the developer's machine, a small Node.js process on the server, and a shared secret for auth. No keys to distribute, no port forwarding rules, no firewall exceptions.

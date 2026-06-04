@@ -9,7 +9,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "mesh": "sudo mesh route"
+  },
+  "devDependencies": {
+    "@avelor/mesh": "^0.2.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild", "sharp"]

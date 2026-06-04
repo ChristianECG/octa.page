@@ -7,7 +7,13 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: 'https://octa.page',
   integrations: [mdx(), sitemap()],
+  server: {
+    port: 4325,
+  },
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ['octa.test'],
+    },
   },
 });

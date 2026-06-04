@@ -1,6 +1,8 @@
 allowBuilds:
   esbuild: true
   sharp: true
+minimumReleaseAgeExclude:
+  - '@avelor/mesh@0.2.1'
 onlyBuiltDependencies:
   - esbuild
   - sharp

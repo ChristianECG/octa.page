@@ -1,12 +1,12 @@
 ---
 title: "Injecting git config per-process with GIT_CONFIG_KEY_n"
-date: 2026-06-06
+date: 2026-06-07
 tags:
   - git
   - deploy
   - linux
   - systemd
-status: draft
+status: published
 ---
 
 Git refuses to operate on a repository owned by a different user than the current process:

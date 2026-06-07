@@ -1,43 +1,53 @@
-# Astro Starter Kit: Minimal
+# octa.page
+
+Static technical notebook. Engineering lab notes, architecture decisions, runtime investigations, and systems research — made public.
+
+## Stack
+
+- **Astro 6** — static generation, minimal client JS
+- **Tailwind CSS v4** via `@tailwindcss/vite`
+- **MDX** via `@astrojs/mdx`
+- Geist Sans + Geist Mono, self-hosted
+
+## Commands
 
 ```sh
-pnpm create astro@latest -- --template minimal
+pnpm dev       # dev server at localhost:4321
+pnpm build     # production build → ./dist/
+pnpm preview   # preview built output
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Content
 
-## 🚀 Project Structure
+Content lives in `/content/{type}/` as Markdown or MDX files with YAML frontmatter.
 
-Inside of your Astro project, you'll see the following folders and files:
+| Type | Purpose |
+|---|---|
+| `architecture` | Architectural decisions and tradeoffs |
+| `runtime` | Browser/runtime behavior research |
+| `pulse` | Building Pulse series |
+| `systems` | Long-form systems essays |
+| `notes` | Short technical notes |
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+### Frontmatter
+
+```yaml
+title: "Title"
+date: 2026-06-06
+tags:
+  - tag
+project: pulse      # optional — links to /project/pulse
+series: pulse       # optional — groups related posts
+pinned: true        # optional
+status: published   # or: draft
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Routes
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+```
+/              → all entries
+/doc/:slug     → article
+/type/:type    → filtered by type
+/project/:name → filtered by project
+```
 
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).

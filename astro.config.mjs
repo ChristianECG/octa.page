@@ -6,7 +6,12 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   site: 'https://octa.page',
-  integrations: [mdx(), sitemap()],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !page.includes('/page/1/'),
+    }),
+  ],
   server: {
     port: 4325,
   },

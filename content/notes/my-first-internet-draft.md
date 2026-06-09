@@ -26,7 +26,7 @@ The IETF has published humor RFCs every April 1st for decades. They are technica
 - **RFC 2549** (1999) — IPoAC with Quality of Service
 - **RFC 6214** (2011) — Adaptation of RFC 1149 for IPv6
 
-RFC 1149 was actually [implemented in Bergen, Norway in 2001](https://en.wikipedia.org/wiki/IP_over_Avian_Carriers#Real-world_implementation) by the Bergen Linux User Group. The example Loft in DoAC is located at Bergen's coordinates (60.391263, 5.322054). This is not a coincidence.
+RFC 1149 was actually [implemented in Bergen, Norway in 2001](https://en.wikipedia.org/wiki/IP_over_Avian_Carriers#Real-life_implementation) by the Bergen Linux User Group. The example Loft in DoAC is located at Bergen's coordinates (60.391263, 5.322054). This is not a coincidence.
 
 ## What DoAC specifies
 

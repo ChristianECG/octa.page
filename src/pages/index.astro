@@ -1,8 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import EntriesTable from '../components/EntriesTable.astro';
+import Pagination from '../components/Pagination.astro';
 import { ALL_TYPES } from '../lib/types';
-import { readingLabel } from '../lib/utils';
+
+const PAGE_SIZE = 20;
 
 const allEntries = (await Promise.all(
   ALL_TYPES.map(async t => {
@@ -10,6 +13,9 @@ const allEntries = (await Promise.all(
     return entries.map(e => ({ entry: e, type: t }));
   })
 )).flat().sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());
+
+const totalPages = Math.max(1, Math.ceil(allEntries.length / PAGE_SIZE));
+const pageEntries = allEntries.slice(0, PAGE_SIZE);
 
 const year = new Date().getFullYear();
 ---
@@ -31,36 +37,10 @@ const year = new Date().getFullYear();
   {allEntries.length === 0 ? (
     <p class="empty">No entries yet. Add markdown files to <code>/content/</code>.</p>
   ) : (
-    <div class="table-wrap">
-      <table class="entries-table">
-        <thead>
-          <tr>
-            <th class="col-n">#</th>
-            <th class="col-date">Date</th>
-            <th class="col-title">Title</th>
-            <th class="col-type">Type</th>
-            <th class="col-read">Read</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allEntries.map(({ entry, type }, i) => (
-            <tr class="entry-row" style={`--i: ${i}`}>
-              <td class="cell-n">{String(i + 1).padStart(2, '0')}</td>
-              <td class="cell-date">
-                {entry.data.date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' })}
-              </td>
-              <td class="cell-title">
-                <a href={`/doc/${entry.id}`} class="entry-link">{entry.data.title}</a>
-              </td>
-              <td class="cell-type">
-                <a href={`/type/${type}`} class="type-link">{type}</a>
-              </td>
-              <td class="cell-read">{readingLabel((entry as any).body)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <EntriesTable entries={pageEntries} offset={0} showType={true} />
+      <Pagination currentPage={1} totalPages={totalPages} baseUrl="/" />
+    </>
   )}
 </BaseLayout>
 
@@ -78,24 +58,6 @@ const year = new Date().getFullYear();
   .hero {
     animation: fade-up 200ms ease-out both;
     animation-delay: 50ms;
-  }
-
-  .table-wrap {
-    animation: fade-up 200ms ease-out both;
-    animation-delay: 90ms;
-  }
-
-  .entry-row {
-    animation: fade-up 180ms ease-out both;
-    animation-delay: min(calc(var(--i) * 25ms + 110ms), 380ms);
-  }
-
-  .strip-left, .strip-right {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-mute);
   }
 
   .hero {
@@ -125,78 +87,12 @@ const year = new Date().getFullYear();
     color: var(--color-ink);
   }
 
-  .table-wrap { overflow-x: auto; }
-
-  .entries-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 520px;
-  }
-
-  .col-n    { width: 44px; }
-  .col-date { width: 96px; }
-  .col-title {}
-  .col-type { width: 120px; }
-  .col-read { width: 60px; text-align: right; }
-
-  .entry-row:hover .cell-title,
-  .entry-row:hover .cell-date,
-  .entry-row:hover .cell-n { color: var(--color-ink); }
-
-  .cell-n {
+  .strip-left, .strip-right {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--color-mute);
-    transition: color 0.12s;
-  }
-
-  .cell-date {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-ink-2);
-    white-space: nowrap;
-    transition: color 0.12s;
-  }
-
-  .cell-title {
-    font-size: 13px;
-    color: var(--color-ink);
-    transition: color 0.12s;
-  }
-
-  .entry-link {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .entry-link::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-  }
-
-  tr { position: relative; }
-
-  .cell-type {
-    font-family: var(--font-mono);
-    font-size: 11px;
-  }
-
-  .type-link {
-    color: var(--color-accent);
-    text-decoration: none;
-    position: relative;
-    z-index: 1;
-    transition: opacity 0.12s;
-  }
-
-  .type-link:hover { opacity: 0.8; }
-
-  .cell-read {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-mute);
-    text-align: right;
   }
 
   .empty {
@@ -213,4 +109,3 @@ const year = new Date().getFullYear();
     padding: 1px 5px;
   }
 </style>
-

@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EntriesTable from '../../components/EntriesTable.astro';
+import Pagination from '../../components/Pagination.astro';
+import { ALL_TYPES } from '../../lib/types';
+
+const PAGE_SIZE = 20;
+
+export async function getStaticPaths() {
+  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
+  const allEntries = (await Promise.all(
+    types.map(async t => {
+      const entries = await getCollection(t, ({ data }) => data.status === 'published');
+      return entries.map(e => ({ entry: e, type: t }));
+    })
+  )).flat().sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());
+
+  const pageSize = 20;
+  const totalPages = Math.max(1, Math.ceil(allEntries.length / pageSize));
+
+  // Generate paths for pages 2+; page 1 is handled by index.astro
+  return Array.from({ length: Math.max(0, totalPages - 1) }, (_, i) => {
+    const page = i + 2;
+    return {
+      params: { page: String(page) },
+      props: {
+        pageEntries: allEntries.slice((page - 1) * pageSize, page * pageSize),
+        currentPage: page,
+        totalPages,
+        totalCount: allEntries.length,
+        offset: (page - 1) * pageSize,
+      },
+    };
+  });
+}
+
+const { pageEntries, currentPage, totalPages, totalCount, offset } = Astro.props;
+
+const year = new Date().getFullYear();
+---
+
+<BaseLayout title={`Octa · Page ${currentPage}`} ogImage="/og/index.png">
+  <div class="top-strip">
+    <span class="strip-left">octa · index · {year}</span>
+    <span class="strip-right">page {currentPage}/{totalPages} · {totalCount} entries</span>
+  </div>
+
+  <div class="hero">
+    <h1 class="hero-title">Systems notes &amp; runtime investigations.</h1>
+    <p class="hero-deck">
+      An engineering lab documenting architecture decisions, runtime research, and performance investigations.
+      <strong class="hero-count">{totalCount} {totalCount === 1 ? 'entry' : 'entries'}</strong> indexed.
+    </p>
+  </div>
+
+  <EntriesTable entries={pageEntries} offset={offset} showType={true} />
+  <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl="/" />
+</BaseLayout>
+
+<style>
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-rule);
+    margin-bottom: 28px;
+    animation: fade-up 200ms ease-out both;
+  }
+
+  .hero {
+    animation: fade-up 200ms ease-out both;
+    animation-delay: 50ms;
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .hero-title {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+    margin-bottom: 10px;
+  }
+
+  .hero-deck {
+    font-size: 13px;
+    color: var(--color-ink-2);
+    max-width: 60ch;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .hero-count {
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  .strip-left, .strip-right {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+  }
+</style>

@@ -1,0 +1,108 @@
+---
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  baseUrl?: string; // e.g. "/" for index, "/type/notes" for type pages
+}
+
+const { currentPage, totalPages, baseUrl = '/' } = Astro.props;
+
+function pageUrl(page: number): string {
+  if (page === 1) return baseUrl;
+  const base = baseUrl.replace(/\/$/, '');
+  return `${base}/page/${page}`;
+}
+
+// Build page window: always show first, last, current ±1, with ellipsis gaps
+const pages: (number | null)[] = [];
+const window = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1].filter(n => n >= 1 && n <= totalPages));
+const sorted = [...window].sort((a, b) => a - b);
+for (let i = 0; i < sorted.length; i++) {
+  if (i > 0 && sorted[i] - sorted[i - 1] > 1) pages.push(null); // ellipsis
+  pages.push(sorted[i]);
+}
+---
+
+{totalPages > 1 && (
+  <nav class="pagination" aria-label="Page navigation">
+    <a
+      href={currentPage > 1 ? pageUrl(currentPage - 1) : undefined}
+      class:list={['pg-btn', { 'pg-disabled': currentPage === 1 }]}
+      aria-disabled={currentPage === 1}
+    >← prev</a>
+
+    <span class="pg-pages">
+      {pages.map(p =>
+        p === null ? (
+          <span class="pg-ellipsis">…</span>
+        ) : (
+          <a
+            href={pageUrl(p)}
+            class:list={['pg-num', { 'pg-current': p === currentPage }]}
+            aria-current={p === currentPage ? 'page' : undefined}
+          >{String(p).padStart(2, '0')}</a>
+        )
+      )}
+    </span>
+
+    <a
+      href={currentPage < totalPages ? pageUrl(currentPage + 1) : undefined}
+      class:list={['pg-btn', { 'pg-disabled': currentPage === totalPages }]}
+      aria-disabled={currentPage === totalPages}
+    >next →</a>
+  </nav>
+)}
+
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .pg-pages {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pg-btn {
+    color: var(--color-ink-2);
+    text-decoration: none;
+    transition: color 0.12s;
+    white-space: nowrap;
+  }
+
+  .pg-btn:hover:not(.pg-disabled) { color: var(--color-ink); }
+
+  .pg-disabled {
+    color: var(--color-mute);
+    pointer-events: none;
+  }
+
+  .pg-num {
+    color: var(--color-ink-2);
+    text-decoration: none;
+    padding: 2px 5px;
+    transition: color 0.12s;
+  }
+
+  .pg-num:hover:not(.pg-current) { color: var(--color-ink); }
+
+  .pg-current {
+    color: var(--color-accent);
+    pointer-events: none;
+  }
+
+  .pg-ellipsis {
+    color: var(--color-mute);
+    padding: 0 3px;
+    user-select: none;
+  }
+</style>

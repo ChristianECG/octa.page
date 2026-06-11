@@ -8,9 +8,9 @@ const TYPES = NAV_TYPES;
 const descriptions: Record<string, string> = {
   architecture: 'System design decisions, tradeoffs, and architectural reasoning.',
   runtime:      'Browser and runtime behavior research and investigation.',
-  pulse:        'Building Pulse — a frontend observability platform.',
   systems:      'Long-form systems essays and infrastructure reasoning.',
   notes:        'Short-form technical notes and observations.',
+  timezone:     'Deep dives into timezone systems, IANA tzdb, and propagation.',
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {

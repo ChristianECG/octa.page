@@ -5,7 +5,7 @@ import { ALL_TYPES, type DocType } from '../../lib/types';
 import { readingMinutes } from '../../lib/utils';
 
 export async function getStaticPaths() {
-  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+  const types = ALL_TYPES;
   const paths = await Promise.all(
     types.map(async type => {
       const entries = await getCollection(type, ({ data }) => data.status === 'published');

@@ -1,11 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { type NavType } from '../../lib/types';
+import { NAV_TYPES, type NavType } from '../../lib/types';
 import { readingLabel } from '../../lib/utils';
 
 export async function getStaticPaths() {
-  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
+  const types = NAV_TYPES;
   return types.map(type => ({ params: { type } }));
 }
 
@@ -14,9 +14,9 @@ const { type } = Astro.params as { type: NavType };
 const labels: Record<NavType, string> = {
   architecture: 'Architecture',
   runtime:      'Runtime',
-  pulse:        'Pulse',
   systems:      'Systems',
   notes:        'Notes',
+  timezone:     'Timezone',
 };
 
 const entries = await getCollection(type, ({ data }) => data.status === 'published');

@@ -1,7 +1,8 @@
 import { getCollection } from 'astro:content';
+import { ALL_TYPES } from '../lib/types';
 
 export async function GET() {
-  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+  const types = ALL_TYPES;
 
   const allTyped = (await Promise.all(
     types.map(async t => {

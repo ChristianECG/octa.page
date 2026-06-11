@@ -1,8 +1,7 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import { generateOG } from '../../../lib/og';
-
-const ALL_TYPES = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+import { ALL_TYPES } from '../../../lib/types';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const allEntries = (await Promise.all(

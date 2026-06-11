@@ -8,7 +8,7 @@ import { ALL_TYPES } from '../../lib/types';
 const PAGE_SIZE = 20;
 
 export async function getStaticPaths() {
-  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes'] as const;
+  const types = ALL_TYPES;
   const allEntries = (await Promise.all(
     types.map(async t => {
       const entries = await getCollection(t, ({ data }) => data.status === 'published');

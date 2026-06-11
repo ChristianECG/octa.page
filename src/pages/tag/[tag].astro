@@ -5,7 +5,7 @@ import { ALL_TYPES } from '../../lib/types';
 import { readingLabel } from '../../lib/utils';
 
 export async function getStaticPaths() {
-  const types = ['architecture', 'runtime', 'pulse', 'systems', 'notes', 'investigations'] as const;
+  const types = ALL_TYPES;
   const allEntries = (await Promise.all(
     types.map(t => getCollection(t, ({ data }) => data.status === 'published'))
   )).flat();

@@ -20,8 +20,7 @@ const makeCollection = (base: string) =>
 export const collections = {
   architecture: makeCollection('./content/architecture'),
   runtime: makeCollection('./content/runtime'),
-  investigations: makeCollection('./content/investigations'),
-  pulse: makeCollection('./content/pulse'),
   systems: makeCollection('./content/systems'),
   notes: makeCollection('./content/notes'),
+  timezone: makeCollection('./content/timezone'),
 };

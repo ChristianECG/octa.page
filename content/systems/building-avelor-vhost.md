@@ -1,5 +1,6 @@
 ---
 title: "Building @avelor/vhost: From Repeated Pain to Open Source Tool"
+description: "@avelor/vhost generates Apache VirtualHost configs from a YAML file — with a managed-config marker for gradual migration, a default-vhost that blocks unrecognized requests, and content-negotiated error pages that serve HTML or JSON based on the Accept header."
 date: 2026-06-02
 tags:
   - apache

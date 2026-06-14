@@ -1,5 +1,6 @@
 ---
 title: "CSS print layout: floats, BFC, and image containment"
+description: "Four print layout behaviors that break screen assumptions: why floats beat CSS Grid for variable-height sidebars, why DOM order matters for floats, why overflow:hidden on a float sibling breaks multi-page layouts, and how to draw rules that actually print."
 date: 2026-05-25
 tags:
   - css

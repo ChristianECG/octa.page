@@ -1,5 +1,6 @@
 ---
 title: "JSON-LD Entity Graph for Brand Disambiguation on Minimal Sites"
+description: "How to use JSON-LD with @id, sameAs, and rel=me to establish a coherent entity graph that disambiguates a brand sharing its name with unrelated entities — the three-node minimum, Wikidata's role, and what structured data cannot do."
 date: 2026-05-24
 tags:
   - seo

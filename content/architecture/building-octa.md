@@ -1,5 +1,6 @@
 ---
 title: "Building Octa: Architecture Decisions for a Static Engineering Notebook"
+description: "Design decisions behind Octa: why Astro over Next.js, how the type/project dual-classification model works, the sidebar architecture, Mermaid diagram rendering without a build-time headless browser, and what was deliberately left out."
 date: 2026-05-20
 tags:
   - astro

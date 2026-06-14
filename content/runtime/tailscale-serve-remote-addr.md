@@ -1,5 +1,6 @@
 ---
 title: "tailscale serve sets REMOTE_ADDR to 127.0.0.1 for every request"
+description: "tailscale serve is a reverse proxy, not a network filter — it collapses all caller identities to 127.0.0.1, silently bypassing any REMOTE_ADDR-based auth guard. The only reliable identity signal is the Tailscale-User-Login header it injects."
 date: 2026-05-21
 tags:
   - tailscale

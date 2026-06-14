@@ -1,5 +1,6 @@
 ---
 title: "Building gob.co.nz: A Static Corrections Register"
+description: "Architecture notes for gob.co.nz, a static public corrections register for the tech industry — stack decisions, Astro 6 Content Layer footguns, build-time OG image generation with sharp, and Pagefind client-side search integration."
 date: 2026-05-20
 tags:
   - astro

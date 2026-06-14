@@ -1,5 +1,6 @@
 ---
 title: "Separating the flag evaluation API from the dashboard in the same monorepo"
+description: "Why Tessera's feature flag evaluation API runs on Hono rather than Next.js API routes — cold start latency, deployment coupling, and framework overhead — and how a shared monorepo makes the split cheap while keeping evaluation logic in one place."
 date: 2026-05-25
 tags:
   - feature-flags

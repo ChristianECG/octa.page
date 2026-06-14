@@ -1,5 +1,6 @@
 ---
 title: "Completing the IPoAC Stack: Why DoAC Had to Exist"
+description: "The IPoAC protocol family had no naming layer for 35 years. DoAC fills the gap with the AA resource record, the Pigeon of Last Resort bootstrap procedure, retransmission semantics calibrated for multi-day transit, and DNSSEC key distribution via Trusted Courier Pigeon."
 date: 2026-06-11
 tags:
   - ietf

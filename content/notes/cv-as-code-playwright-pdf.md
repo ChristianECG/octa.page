@@ -1,5 +1,6 @@
 ---
 title: "CV as Code: Generating a PDF from an Astro page with Playwright"
+description: "Generating a print-ready PDF CV from a static Astro page using Playwright headlessly — why @page margins are ignored by Playwright, why astro-pdf was skipped, and ATS compatibility pitfalls with em dashes and special characters."
 date: 2026-05-31
 tags:
   - astro

@@ -1,5 +1,6 @@
 ---
 title: "My First Internet Draft: DNS over Avian Carriers"
+description: "Notes on submitting draft-cruzgonzalez-ipoac-dns-00 to the IETF: what DoAC specifies, the AA resource record wire format, the Pigeon of Last Resort bootstrap problem, DNSSEC over Trusted Courier Pigeon, and the path to publication as an April Fools RFC."
 date: 2026-06-09
 tags:
   - ietf

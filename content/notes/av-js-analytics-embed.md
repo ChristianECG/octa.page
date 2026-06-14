@@ -1,5 +1,6 @@
 ---
 title: "av.js — self-hosted analytics embed"
+description: "API reference for av.js: the minimal analytics snippet for Avelor-hosted projects. Covers the embed pattern, the pageview payload structure, custom event API, session ID strategy, and implementation constraints like keepalive fetches and localhost filtering."
 date: 2026-05-23
 tags:
   - analytics

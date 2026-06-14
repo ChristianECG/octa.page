@@ -1,5 +1,6 @@
 ---
 title: "RSS as a cross-site content bridge in Astro SSG"
+description: "Using RSS as a stateless content contract between two independent Astro static sites, with GitHub Actions repository_dispatch to trigger rebuilds only when Markdown content changes — not on every commit."
 date: 2026-05-24
 tags:
   - rss

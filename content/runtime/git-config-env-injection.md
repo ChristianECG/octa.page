@@ -1,5 +1,6 @@
 ---
 title: "Injecting git config per-process with GIT_CONFIG_KEY_n"
+description: "Injecting git safe.directory per-process via GIT_CONFIG_COUNT and GIT_CONFIG_KEY_n environment variables — no file writes, no sudo — the correct fix for deploy agents running as root against repositories owned by www-data."
 date: 2026-06-07
 tags:
   - git

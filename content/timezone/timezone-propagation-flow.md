@@ -1,5 +1,6 @@
 ---
 title: "Timezone Propagation: How IANA Changes Reach Your Application"
+description: "How IANA timezone changes travel from the tzdb release through CLDR, OS updates, and language runtimes — including Node.js's Date/Intl split where the same environment can produce two different answers, and the British Columbia permanent DST workaround."
 date: 2026-06-12
 tags:
   - timezone

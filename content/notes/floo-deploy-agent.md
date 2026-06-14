@@ -1,5 +1,6 @@
 ---
 title: "floo: a minimal deploy agent for self-hosted VPS"
+description: "floo runs an HTTP deploy agent on the server with YAML-defined project steps, scoped tokens stored as SHA-256 hashes, and real-time log streaming via SSE. systemd as the process supervisor, no Docker, no managed platforms."
 date: 2026-06-06
 tags:
   - deploy

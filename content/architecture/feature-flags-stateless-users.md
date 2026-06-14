@@ -1,5 +1,6 @@
 ---
 title: "Feature flag services don't store user IDs — and the consequence of that"
+description: "Tessera stores no user records — rollout consistency comes from deterministic hashing, not a user registry. The consequence: exposure analytics require a separate events table. How LaunchDarkly, Statsig, and PostHog Flags handle the same tradeoff."
 date: 2026-05-26
 tags:
   - feature-flags

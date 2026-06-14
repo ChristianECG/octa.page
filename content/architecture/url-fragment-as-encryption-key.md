@@ -1,5 +1,6 @@
 ---
 title: "Using the URL fragment as an encryption key carrier"
+description: "Client-side AES-256-GCM encryption where the key lives exclusively in the URL fragment — never transmitted to the server. The design, the constraints around browser history and intermediaries, and why out-of-band key delivery defeats the UX goal."
 date: 2026-05-22
 tags:
   - cryptography

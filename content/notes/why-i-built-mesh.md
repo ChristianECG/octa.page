@@ -1,5 +1,6 @@
 ---
 title: "Why I Built mesh: Local Dev Proxy with Named Services and Failure Injection"
+description: "mesh is a local dev proxy where services get names instead of port numbers, and a YAML rules block injects failures at the network layer — 503s, delays, per-request rates — without touching backend code or adding mocks."
 date: 2026-06-01
 tags:
   - proxy

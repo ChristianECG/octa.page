@@ -1,5 +1,6 @@
 ---
 title: "Bifrost: what changed when a private tunnel became a public package"
+description: "Design changes required to turn a single-user WebSocket tunnel into a self-hostable package: named peers with subdomain routing, scoped tokens stored as SHA-256 hashes, backpressure limits, dead connection detection, and queue drain on disconnect."
 date: 2026-06-03
 tags:
   - websocket

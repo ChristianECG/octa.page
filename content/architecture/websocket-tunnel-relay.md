@@ -1,5 +1,6 @@
 ---
 title: "A WebSocket relay as a self-hosted tunnel"
+description: "A single Node.js process that exposes localhost over public HTTPS using a persistent outbound WebSocket from the CLI — token auth in the handshake, request queuing with UUID correlation, 30s timeout, and no inbound ports on the developer's machine."
 date: 2026-05-22
 tags:
   - websocket

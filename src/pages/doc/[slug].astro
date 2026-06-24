@@ -50,10 +50,22 @@ const related: RelatedEntry[] = scored.map(({ entry: e, type: t }) => ({
   type:  t,
   date:  e.data.date.toISOString().split('T')[0],
 }));
+
+// Chronological prev/next across all published entries (newest first).
+// prev -> newer article, next -> older article.
+type NavEntry = { slug: string; title: string; type: string };
+const chronological = [{ entry, type }, ...allEntries]
+  .sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());
+const currentIndex = chronological.findIndex(({ entry: e }) => e.id === entry.id);
+const toNav = (item?: { entry: any; type: string }): NavEntry | undefined =>
+  item ? { slug: item.entry.id, title: item.entry.data.title, type: item.type } : undefined;
+const prev = toNav(chronological[currentIndex - 1]);
+const next = toNav(chronological[currentIndex + 1]);
 ---
 
 <ArticleLayout
   title={entry.data.title}
+  description={entry.data.description}
   date={entry.data.date}
   tags={entry.data.tags}
   series={entry.data.series}
@@ -63,6 +75,8 @@ const related: RelatedEntry[] = scored.map(({ entry: e, type: t }) => ({
   type={type}
   headings={tocHeadings}
   related={related}
+  prev={prev}
+  next={next}
   ogImage={`/og/doc/${entry.id}.png`}
 >
   <Content />

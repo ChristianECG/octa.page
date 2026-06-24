@@ -14,8 +14,15 @@ interface RelatedEntry {
   date: string;
 }
 
+interface NavEntry {
+  slug: string;
+  title: string;
+  type: string;
+}
+
 interface Props {
   title: string;
+  description?: string;
   date: Date;
   tags?: string[];
   series?: string;
@@ -25,10 +32,12 @@ interface Props {
   type: string;
   headings?: Heading[];
   related?: RelatedEntry[];
+  prev?: NavEntry;
+  next?: NavEntry;
   ogImage?: string;
 }
 
-const { title, date, tags = [], series, project, readingTime, wordCount, type, headings = [], related = [], ogImage } = Astro.props;
+const { title, description, date, tags = [], series, project, readingTime, wordCount, type, headings = [], related = [], prev, next, ogImage } = Astro.props;
 const hasToc = headings.length > 0;
 
 const formattedDate = date.toLocaleDateString('en-US', {
@@ -37,9 +46,32 @@ const formattedDate = date.toLocaleDateString('en-US', {
   day: 'numeric',
   timeZone: 'UTC',
 });
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = ogImage ? new URL(ogImage, Astro.site).href : undefined;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: title,
+  description,
+  datePublished: date.toISOString(),
+  dateModified: date.toISOString(),
+  author: { '@type': 'Person', name: 'Christian Elías', url: 'https://christianecg.com' },
+  publisher: { '@type': 'Person', name: 'Christian Elías', url: 'https://christianecg.com' },
+  url: canonicalURL.href,
+  mainEntityOfPage: canonicalURL.href,
+  image: ogImageURL,
+  keywords: tags.length > 0 ? tags.join(', ') : undefined,
+  wordCount,
+  articleSection: type,
+};
 ---
 
-<BaseLayout title={title} ogImage={ogImage}>
+<BaseLayout title={title} description={description} ogImage={ogImage}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+  </Fragment>
   <!-- Read progress bar -->
   <div class="read-progress" id="read-progress" aria-hidden="true">
     <div class="read-progress-fill" id="read-progress-fill"></div>
@@ -105,6 +137,25 @@ const formattedDate = date.toLocaleDateString('en-US', {
               ))}
             </ul>
           </section>
+        )}
+
+        {(prev || next) && (
+          <nav class="article-pager" aria-label="Previous and next articles">
+            {prev ? (
+              <a href={`/doc/${prev.slug}`} class="pager-link pager-link--prev" rel="prev">
+                <span class="pager-dir">← Previous</span>
+                <span class="pager-title">{prev.title}</span>
+                <span class="pager-type">{prev.type}</span>
+              </a>
+            ) : <span class="pager-link pager-link--empty" aria-hidden="true"></span>}
+            {next ? (
+              <a href={`/doc/${next.slug}`} class="pager-link pager-link--next" rel="next">
+                <span class="pager-dir">Next →</span>
+                <span class="pager-title">{next.title}</span>
+                <span class="pager-type">{next.type}</span>
+              </a>
+            ) : <span class="pager-link pager-link--empty" aria-hidden="true"></span>}
+          </nav>
         )}
       </div>
 
@@ -474,6 +525,77 @@ const formattedDate = date.toLocaleDateString('en-US', {
     margin-top: 3rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--color-rule);
+  }
+
+  :global(.article-pager) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-top: 3rem;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  :global(.pager-link) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 0;
+    text-decoration: none;
+    border-top: 2px solid transparent;
+    margin-top: -1px;
+    transition: border-color 0.12s;
+  }
+
+  :global(.pager-link--next) {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  :global(.pager-link--empty) {
+    pointer-events: none;
+  }
+
+  :global(.pager-link:hover) {
+    border-top-color: var(--color-accent);
+  }
+
+  :global(.pager-dir) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+  }
+
+  :global(.pager-title) {
+    font-size: 13px;
+    color: var(--color-ink-2);
+    transition: color 0.12s;
+  }
+
+  :global(.pager-link:hover .pager-title) {
+    color: var(--color-ink);
+  }
+
+  :global(.pager-type) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  @media (max-width: 640px) {
+    :global(.article-pager) {
+      grid-template-columns: 1fr;
+    }
+    :global(.pager-link--next) {
+      align-items: flex-start;
+      text-align: left;
+    }
+    :global(.pager-link--empty) {
+      display: none;
+    }
   }
 
   :global(.related-label) {

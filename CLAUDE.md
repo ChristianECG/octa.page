@@ -37,7 +37,7 @@ pnpm astro      # direct astro CLI access
 ```
 /              → homepage (all entries, table layout)
 /doc/:slug     → individual article (slug = markdown filename without extension)
-/type/:type    → articles filtered by type (architecture, runtime, pulse, systems, notes)
+/type/:type    → articles filtered by type (architecture, runtime, systems, notes, timezone)
 /project/:name → articles filtered by project
 ```
 
@@ -47,18 +47,17 @@ pnpm astro      # direct astro CLI access
 
 ## Content Types (collections)
 
-Content lives in `/content/{type}/` at the repo root. The six Astro collections map to these directories:
+Content lives in `/content/{type}/` at the repo root. The five Astro collections map to these directories:
 
 | Type | Purpose |
 |------|---------|
 | `architecture` | Architectural decisions and tradeoffs |
 | `runtime` | Browser/runtime behavior research |
-| `pulse` | Building Pulse series |
 | `systems` | Long-form systems essays |
 | `notes` | Short technical notes |
-| `investigations` | (legacy — do not expose in nav) |
+| `timezone` | Timezone / IANA / i18n investigations |
 
-`investigations` is kept in the config for backward compatibility but is **not shown in sidebar navigation**. New content goes into one of the five active types.
+The active type set is defined in `src/lib/types.ts` (`ALL_TYPES`) and `src/content.config.ts`. New content goes into one of these five types.
 
 ---
 
@@ -70,6 +69,7 @@ date: 2026-05-19
 tags:
   - react
   - scheduler
+description: "One-line summary — used for meta description, OG/Twitter cards, JSON-LD, and RSS"
 project: pulse       # optional — links to /project/pulse in sidebar + breadcrumb
 series: pulse        # optional — groups related posts
 pinned: true         # optional — appears in sidebar "Pinned" count
@@ -80,7 +80,7 @@ status: published    # or: draft (excluded from build and sidebar counts)
 
 ## Code Architecture
 
-**Content Layer** (`src/content.config.ts`): All six types share a single `articleSchema` via a `makeCollection()` helper pointing to `./content/{type}/`.
+**Content Layer** (`src/content.config.ts`): All five types share a single `articleSchema` via a `makeCollection()` helper pointing to `./content/{type}/`.
 
 **`getStaticPaths` constraint**: In Astro 6, `getStaticPaths` runs in an isolated scope. Do NOT reference module-level `const` arrays inside it — define the types array inline inside the function each time.
 
@@ -92,7 +92,7 @@ status: published    # or: draft (excluded from build and sidebar counts)
 
 **Layouts** (`src/layouts/`):
 - `BaseLayout.astro` — HTML shell, imports `global.css`, renders `<Sidebar>`, mobile bar, and footer with social links (christianecg.com, GitHub, LinkedIn)
-- `ArticleLayout.astro` — wraps BaseLayout, article header with breadcrumb (octa / type / project), title, and metadata row
+- `ArticleLayout.astro` — wraps BaseLayout, article header with breadcrumb (octa / type / project), title, and metadata row. Emits per-article `TechArticle` JSON-LD into BaseLayout's `head` slot, and renders chronological prev/next pager at the foot of the prose (prev = newer entry, next = older). `description` flows through to meta/OG tags — always set it in frontmatter.
 
 **Sidebar** (`src/components/Sidebar.astro`): Single-scroll nav with three groups — Index (all notes, this month, pinned, drafts), Types, and Projects. Projects group only appears if any published entry has a `project` field. Status block at bottom shows build status and entry count. No tabs.
 
@@ -120,4 +120,4 @@ status: published    # or: draft (excluded from build and sidebar counts)
 
 ## Integration Context
 
-Octa is the public R&D layer for **Pulse** (a frontend observability platform). Content in the `pulse` type and `project: pulse` articles document Pulse's design and implementation.
+Octa is the public R&D layer for **Pulse** (a frontend observability platform). Articles with `project: pulse` document Pulse's design and implementation. (There is no longer a dedicated `pulse` content type — use `project: pulse` instead.)

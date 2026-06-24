@@ -62,20 +62,20 @@ const pathname = Astro.url.pathname;
       <p class="nav-group-label">Index</p>
       <ul class="nav-list">
         <li>
-          <a href="/" class:list={['nav-item', { active: pathname === '/' }]}>
+          <a href="/" class:list={['nav-item', { active: pathname === '/' }]} aria-current={pathname === '/' ? 'page' : undefined}>
             <span>All notes</span>
             <span class="nav-count">{totalEntries}</span>
           </a>
         </li>
         <li>
-          <a href="/filter/month" class:list={['nav-item', { active: pathname === '/filter/month' }]}>
+          <a href="/filter/month" class:list={['nav-item', { active: pathname === '/filter/month' }]} aria-current={pathname === '/filter/month' ? 'page' : undefined}>
             <span>This month</span>
             <span class="nav-count">{thisMonthEntries.length}</span>
           </a>
         </li>
         {pinnedEntries.length > 0 && (
           <li>
-            <a href="/filter/pinned" class:list={['nav-item', { active: pathname === '/filter/pinned' }]}>
+            <a href="/filter/pinned" class:list={['nav-item', { active: pathname === '/filter/pinned' }]} aria-current={pathname === '/filter/pinned' ? 'page' : undefined}>
               <span>Pinned</span>
               <span class="nav-count">{pinnedEntries.length}</span>
             </a>
@@ -98,7 +98,7 @@ const pathname = Astro.url.pathname;
       <ul class="nav-list">
         {typeList.map(({ label, href, count }) => (
           <li>
-            <a href={href} class:list={['nav-item', { active: pathname.startsWith(href) }]}>
+            <a href={href} class:list={['nav-item', { active: pathname.startsWith(href) }]} aria-current={pathname.startsWith(href) ? 'page' : undefined}>
               <span>{label}</span>
               <span class="nav-count">{count}</span>
             </a>
@@ -117,6 +117,7 @@ const pathname = Astro.url.pathname;
               <a
                 href={`/project/${name}`}
                 class:list={['nav-item', { active: pathname.startsWith(`/project/${name}`) }]}
+                aria-current={pathname.startsWith(`/project/${name}`) ? 'page' : undefined}
               >
                 <span>{name}</span>
                 <span class="nav-count">{count}</span>

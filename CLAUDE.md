@@ -16,8 +16,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Styling**: Tailwind CSS v4 via `@tailwindcss/vite` (not `@astrojs/tailwind` — incompatible with Astro 6)
 - **Fonts**: Geist Sans + Geist Mono (woff2 variable fonts in `/public/fonts/`, self-hosted via `@font-face` in `global.css`)
 - **Content**: Markdown / MDX with YAML frontmatter, Content Layer API (`src/content.config.ts`)
-- **Integrations**: `@astrojs/mdx`, `@astrojs/sitemap`
+- **Integrations**: `@astrojs/mdx`, `@astrojs/sitemap`, `@astrojs/rss`
+- **Other deps**: `marked` (RSS full-content rendering), `mermaid` (diagrams), `satori` + `sharp` (OG image generation)
 - **Package manager**: pnpm
+- **Deploy**: GitHub Pages via `.github/workflows/deploy.yml` (push to `master`)
 
 ---
 
@@ -35,10 +37,18 @@ pnpm astro      # direct astro CLI access
 ## URL Structure
 
 ```
-/              → homepage (all entries, table layout)
-/doc/:slug     → individual article (slug = markdown filename without extension)
-/type/:type    → articles filtered by type (architecture, runtime, systems, notes, timezone)
-/project/:name → articles filtered by project
+/                → homepage (all entries, table layout)
+/page/:n         → homepage pagination
+/doc/:slug       → individual article (slug = markdown filename without extension)
+/doc/:slug.md    → raw Markdown version of the article (frontmatter + body, for AI/LLM consumption)
+/type/:type      → articles filtered by type (architecture, runtime, systems, notes, timezone)
+/project/:name   → articles filtered by project
+/tag/:tag        → articles filtered by tag
+/filter/:filter  → index filters (this month, pinned, …)
+/rss.xml         → RSS feed (descriptions + full rendered content)
+/search.json     → JSON index of all published entries (slug, title, type, tags, project, date)
+/llms.txt        → llms.txt index for AI crawlers, links to the .md versions
+/og/...          → generated OG images (satori + sharp): /og/index.png, /og/doc/:slug.png, /og/type/:type.png, /og/project/:project.png
 ```
 
 **Important:** slugs must be unique across all content directories since all articles share the `/doc/` prefix.
@@ -85,10 +95,13 @@ status: published    # or: draft (excluded from build and sidebar counts)
 **`getStaticPaths` constraint**: In Astro 6, `getStaticPaths` runs in an isolated scope. Do NOT reference module-level `const` arrays inside it — define the types array inline inside the function each time.
 
 **Routing** (`src/pages/`):
-- `index.astro` — homepage, queries all collections, renders entries table
-- `doc/[slug].astro` — article page, iterates all types to find the entry
-- `type/[type].astro` — type listing page
+- `index.astro` + `page/[page].astro` — homepage with pagination, queries all collections, renders entries table
+- `doc/[slug].astro` — article page, iterates all types to find the entry; computes related articles (shared tags/project/type) and chronological prev/next
+- `doc/[slug].md.ts` — raw Markdown endpoint (reconstructed frontmatter + `entry.body`), `text/markdown`
+- `type/[type].astro`, `tag/[tag].astro`, `filter/[filter].astro` — listing pages
 - `project/[project].astro` — project listing page (paths derived from `project` frontmatter values)
+- `rss.xml.ts`, `search.json.ts`, `llms.txt.ts` — machine-readable feeds/indexes over all published entries
+- `og/` — OG image endpoints rendered with satori + sharp via `src/lib/og.ts` (colors/fonts mirror `global.css` tokens)
 
 **Layouts** (`src/layouts/`):
 - `BaseLayout.astro` — HTML shell, imports `global.css`, renders `<Sidebar>`, mobile bar, and footer with social links (christianecg.com, GitHub, LinkedIn)

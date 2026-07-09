@@ -48,6 +48,7 @@ const formattedDate = date.toLocaleDateString('en-US', {
 });
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const markdownURL = new URL(Astro.url.pathname.replace(/\/$/, '') + '.md', Astro.site);
 const ogImageURL = ogImage ? new URL(ogImage, Astro.site).href : undefined;
 
 const jsonLd = {
@@ -70,6 +71,8 @@ const jsonLd = {
 
 <BaseLayout title={title} description={description} ogImage={ogImage}>
   <Fragment slot="head">
+    <link rel="alternate" type="text/markdown" href={markdownURL} />
+    <link rel="alternate" type="text/plain" title="RFC-style plain text" href={new URL(Astro.url.pathname.replace(/\/$/, '') + '.txt', Astro.site)} />
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
   </Fragment>
   <!-- Read progress bar -->

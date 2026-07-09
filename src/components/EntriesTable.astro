@@ -35,6 +35,7 @@ const { entries, offset = 0, showType = true } = Astro.props;
           </td>
           <td class="cell-title">
             <a href={`/doc/${entry.id}`} class="entry-link">{entry.data.title}</a>
+            {entry.data.status === 'draft' && <span class="draft-badge">draft</span>}
           </td>
           {showType && (
             <td class="cell-type">

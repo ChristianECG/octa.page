@@ -2,13 +2,13 @@
 import { getCollection, render } from 'astro:content';
 import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import { ALL_TYPES, type DocType } from '../../lib/types';
-import { readingMinutes } from '../../lib/utils';
+import { isVisible, readingMinutes } from '../../lib/utils';
 
 export async function getStaticPaths() {
   const types = ALL_TYPES;
   const paths = await Promise.all(
     types.map(async type => {
-      const entries = await getCollection(type, ({ data }) => data.status === 'published');
+      const entries = await getCollection(type, isVisible);
       return entries.map(entry => ({
         params: { slug: entry.id },
         props:  { entry, type },
@@ -30,7 +30,7 @@ const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
 // Compute related articles by shared tags + project + type
 const allEntries = (await Promise.all(
   ALL_TYPES.map(async t => {
-    const entries = await getCollection(t, ({ data }) => data.status === 'published');
+    const entries = await getCollection(t, isVisible);
     return entries.map(e => ({ entry: e, type: t as string }));
   })
 )).flat().filter(({ entry: e }) => e.id !== entry.id);
@@ -78,6 +78,7 @@ const next = toNav(chronological[currentIndex + 1]);
   prev={prev}
   next={next}
   ogImage={`/og/doc/${entry.id}.png`}
+  draft={entry.data.status === 'draft'}
 >
   <Content />
 </ArticleLayout>

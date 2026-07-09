@@ -1,3 +1,9 @@
+// Content visibility filter: drafts render in `pnpm dev` (with DRAFT badges),
+// but are always excluded from production builds.
+export function isVisible({ data }: { data: { status: string } }): boolean {
+  return data.status === 'published' || import.meta.env.DEV;
+}
+
 export function readingMinutes(body?: string): number | undefined {
   if (!body) return undefined;
   const text = body.replace(/```[\s\S]*?```/g, '').replace(/`[^`]*`/g, '');

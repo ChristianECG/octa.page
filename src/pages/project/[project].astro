@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { ALL_TYPES } from '../../lib/types';
-import { readingLabel } from '../../lib/utils';
+import { isVisible, readingLabel } from '../../lib/utils';
 
 const PROJECT_URLS: Record<string, string> = {
   avelor: 'https://avelor.es',
@@ -12,7 +12,7 @@ const PROJECT_URLS: Record<string, string> = {
 export async function getStaticPaths() {
   const types = ALL_TYPES;
   const allEntries = (await Promise.all(
-    types.map(t => getCollection(t, ({ data }) => data.status === 'published'))
+    types.map(t => getCollection(t, isVisible))
   )).flat();
 
   const projects = [...new Set(allEntries.map(e => e.data.project).filter(Boolean))] as string[];
@@ -23,7 +23,7 @@ const { project } = Astro.props;
 
 const allEntries = (await Promise.all(
   ALL_TYPES.map(async t => {
-    const entries = await getCollection(t, ({ data }) => data.status === 'published' && data.project === project);
+    const entries = await getCollection(t, e => isVisible(e) && e.data.project === project);
     return entries.map(e => ({ entry: e, type: t }));
   })
 )).flat().sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());
@@ -65,6 +65,7 @@ const allEntries = (await Promise.all(
               </td>
               <td class="cell-title">
                 <a href={`/doc/${entry.id}`} class="entry-link">{entry.data.title}</a>
+                {entry.data.status === 'draft' && <span class="draft-badge">draft</span>}
               </td>
               <td class="cell-type">
                 <a href={`/type/${type}`} class="type-link">{type}</a>

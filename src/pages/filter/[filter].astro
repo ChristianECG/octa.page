@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { ALL_TYPES } from '../../lib/types';
-import { readingLabel } from '../../lib/utils';
+import { isVisible, readingLabel } from '../../lib/utils';
 
 export async function getStaticPaths() {
   return ['month', 'pinned'].map(filter => ({ params: { filter } }));
@@ -13,7 +13,7 @@ const { filter } = Astro.params as { filter: 'month' | 'pinned' };
 const now = new Date();
 const allEntries = (await Promise.all(
   ALL_TYPES.map(async t => {
-    const entries = await getCollection(t, ({ data }) => data.status === 'published');
+    const entries = await getCollection(t, isVisible);
     return entries.map(e => ({ entry: e, type: t }));
   })
 )).flat().sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());
@@ -62,6 +62,7 @@ const label = labels[filter];
               </td>
               <td class="cell-title">
                 <a href={`/doc/${entry.id}`} class="entry-link">{entry.data.title}</a>
+                {entry.data.status === 'draft' && <span class="draft-badge">draft</span>}
               </td>
               <td class="cell-type">
                 <a href={`/type/${type}`} class="type-link">{type}</a>

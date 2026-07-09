@@ -379,3 +379,35 @@ tr:last-child td { border-bottom: none; }
     padding: 16px 20px;
   }
 }
+
+/* ── Draft indicators (dev only — drafts never reach production builds) ── */
+
+.draft-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d4a24e;
+  border: 1px dashed rgba(212, 162, 78, 0.5);
+  padding: 1px 6px;
+  margin-left: 8px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+.draft-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #d4a24e;
+  background: rgba(212, 162, 78, 0.06);
+  border: 1px dashed rgba(212, 162, 78, 0.4);
+  padding: 8px 12px;
+  margin-bottom: 24px;
+}
+
+.draft-banner .draft-badge {
+  margin-left: 0;
+}

@@ -2,12 +2,12 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { ALL_TYPES } from '../../lib/types';
-import { readingLabel } from '../../lib/utils';
+import { isVisible, readingLabel } from '../../lib/utils';
 
 export async function getStaticPaths() {
   const types = ALL_TYPES;
   const allEntries = (await Promise.all(
-    types.map(t => getCollection(t, ({ data }) => data.status === 'published'))
+    types.map(t => getCollection(t, isVisible))
   )).flat();
 
   const tags = [...new Set(allEntries.flatMap(e => e.data.tags ?? []))];
@@ -18,8 +18,8 @@ const { tag } = Astro.params as { tag: string };
 
 const allEntries = (await Promise.all(
   ALL_TYPES.map(async t => {
-    const entries = await getCollection(t, ({ data }) =>
-      data.status === 'published' && (data.tags ?? []).includes(tag)
+    const entries = await getCollection(t, e =>
+      isVisible(e) && (e.data.tags ?? []).includes(tag)
     );
     return entries.map(e => ({ entry: e, type: t }));
   })
@@ -59,6 +59,7 @@ const allEntries = (await Promise.all(
               </td>
               <td class="cell-title">
                 <a href={`/doc/${entry.id}`} class="entry-link">{entry.data.title}</a>
+                {entry.data.status === 'draft' && <span class="draft-badge">draft</span>}
               </td>
               <td class="cell-type">
                 <a href={`/type/${type}`} class="type-link">{type}</a>

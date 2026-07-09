@@ -4,6 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import EntriesTable from '../../components/EntriesTable.astro';
 import Pagination from '../../components/Pagination.astro';
 import { ALL_TYPES } from '../../lib/types';
+import { isVisible } from '../../lib/utils';
 
 const PAGE_SIZE = 20;
 
@@ -11,7 +12,7 @@ export async function getStaticPaths() {
   const types = ALL_TYPES;
   const allEntries = (await Promise.all(
     types.map(async t => {
-      const entries = await getCollection(t, ({ data }) => data.status === 'published');
+      const entries = await getCollection(t, isVisible);
       return entries.map(e => ({ entry: e, type: t }));
     })
   )).flat().sort((a, b) => b.entry.data.date.getTime() - a.entry.data.date.getTime());

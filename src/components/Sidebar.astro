@@ -1,10 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
 import { ALL_TYPES, NAV_TYPES } from '../lib/types';
+import { isVisible } from '../lib/utils';
 
 const [publishedWithType, allEntriesRaw] = await Promise.all([
   Promise.all(ALL_TYPES.map(async c => {
-    const entries = await getCollection(c, ({ data }) => data.status === 'published');
+    const entries = await getCollection(c, isVisible);
     return entries.map(e => ({ entry: e, type: c }));
   })).then(r => r.flat()),
   Promise.all(ALL_TYPES.map(c => getCollection(c))).then(r => r.flat()),

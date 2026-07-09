@@ -35,9 +35,10 @@ interface Props {
   prev?: NavEntry;
   next?: NavEntry;
   ogImage?: string;
+  draft?: boolean;
 }
 
-const { title, description, date, tags = [], series, project, readingTime, wordCount, type, headings = [], related = [], prev, next, ogImage } = Astro.props;
+const { title, description, date, tags = [], series, project, readingTime, wordCount, type, headings = [], related = [], prev, next, ogImage, draft = false } = Astro.props;
 const hasToc = headings.length > 0;
 
 const formattedDate = date.toLocaleDateString('en-US', {
@@ -81,6 +82,12 @@ const jsonLd = {
   </div>
 
   <article class="article-wrap">
+    {draft && (
+      <div class="draft-banner" role="status">
+        <span class="draft-badge">draft</span>
+        <span>Visible only in dev — excluded from the production build.</span>
+      </div>
+    )}
     <header class="article-header">
       <div class="article-breadcrumb">
         <span class="breadcrumb-item"><a href="/">octa</a></span>

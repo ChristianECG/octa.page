@@ -8,7 +8,7 @@ tags:
   - rfc
   - content-formats
 project: octa
-status: draft
+status: published
 ---
 
 Every article on this site is now also served as an RFC-style plain text document at `/doc/:slug.txt`, alongside the existing HTML and raw Markdown (`/doc/:slug.md`) versions.
